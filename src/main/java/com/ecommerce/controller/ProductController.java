@@ -2,6 +2,7 @@ package com.ecommerce.controller;
 
 import com.ecommerce.dto.request.ProductRequest;
 import com.ecommerce.dto.response.ProductResponse;
+import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,12 +22,12 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+    public ResponseEntity<List<ProductResponse>> getAllProducts() throws ProductNotFoundException {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
     @GetMapping("/products/{id}")
-    public ResponseEntity<ProductResponse> getProduct(@PathVariable Integer id) {
+    public ResponseEntity<ProductResponse> getProduct(@PathVariable Integer id) throws ProductNotFoundException {
         var product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
@@ -38,7 +39,7 @@ public class ProductController {
     }
 
     @PutMapping("/products/{id}")
-    public ResponseEntity<ProductResponse> updateProductDetail(@PathVariable Integer id, @RequestBody ProductRequest productRequest) {
+    public ResponseEntity<ProductResponse> updateProductDetail(@PathVariable Integer id, @RequestBody ProductRequest productRequest) throws ProductNotFoundException {
         var product = productService.updateProductById(id, productRequest);
         return ResponseEntity.ok(product);
     }

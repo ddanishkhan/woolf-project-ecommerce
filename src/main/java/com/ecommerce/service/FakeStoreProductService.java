@@ -2,7 +2,9 @@ package com.ecommerce.service;
 
 import com.ecommerce.dto.request.ProductRequest;
 import com.ecommerce.dto.response.ProductResponse;
+import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.external.api.ProductStoreClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -13,19 +15,22 @@ public class FakeStoreProductService implements ProductService {
 
     private final ProductStoreClient productStoreClient;
 
+    @Autowired
     public FakeStoreProductService(@Qualifier("fakeStoreClient") ProductStoreClient productStoreClient) {
         this.productStoreClient = productStoreClient;
     }
 
     @Override
-    public List<ProductResponse> getAllProducts() {
+    public List<ProductResponse> getAllProducts() throws ProductNotFoundException {
         var response = productStoreClient.getAllProducts();
+        if (response == null || response.getBody() == null) throw new ProductNotFoundException();
         return response.getBody();
     }
 
     @Override
-    public ProductResponse getProductById(Integer id) {
+    public ProductResponse getProductById(Integer id) throws ProductNotFoundException {
         var response = productStoreClient.getProductById(id);
+        if (response == null || response.getBody() == null) throw new ProductNotFoundException();
         return response.getBody();
     }
 
