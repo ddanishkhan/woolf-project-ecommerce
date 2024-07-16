@@ -22,4 +22,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(value = UnsupportedOperationException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUnsupportedOperationException(UnsupportedOperationException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO();
+        errorResponse.setMessage(Optional.ofNullable(ex.getMessage()).orElse("Requested operation is not supported."));
+        errorResponse.setMessageCode(HttpStatus.NOT_IMPLEMENTED.value());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_IMPLEMENTED);
+    }
+
 }
