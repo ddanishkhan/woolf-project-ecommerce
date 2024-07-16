@@ -19,7 +19,7 @@ public class ProductEntity extends BaseUUIDEntity {
 
     private String description;
 
-    private double price;
+    private Double price;
 
     private String coverImageURL;
 

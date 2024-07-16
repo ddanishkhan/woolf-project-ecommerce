@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service("fakeStore")
 public class FakeStoreProductService implements ProductService {
@@ -21,17 +22,20 @@ public class FakeStoreProductService implements ProductService {
     }
 
     @Override
-    public List<ProductResponse> getAllProducts() throws ProductNotFoundException {
+    public List<ProductResponse> getAllProducts(){
         var response = productStoreClient.getAllProducts();
-        if (response == null || response.getBody() == null) throw new ProductNotFoundException();
+        if (response == null || response.getBody() == null) return List.of();
         return response.getBody();
     }
 
     @Override
-    public ProductResponse getProductById(Integer id) throws ProductNotFoundException {
-        var response = productStoreClient.getProductById(id);
-        if (response == null || response.getBody() == null) throw new ProductNotFoundException();
-        return response.getBody();
+    public ProductResponse getProductById(UUID id) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ProductResponse getProductByName(String productName) throws ProductNotFoundException {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -40,14 +44,13 @@ public class FakeStoreProductService implements ProductService {
     }
 
     @Override
-    public boolean deleteProductById(Integer id) {
-        productStoreClient.deleteProductById(id);
-        return true;
+    public boolean deleteProductById(UUID id) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public ProductResponse updateProductById(Integer id, ProductRequest productRequest) {
-        return productStoreClient.updateProductById(id, productRequest).getBody();
+    public ProductResponse updateProductById(UUID id, ProductRequest productRequest) {
+        throw new UnsupportedOperationException();
     }
 
 }

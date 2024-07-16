@@ -9,6 +9,7 @@ import com.ecommerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service("productService")
 public class ProductServiceImpl implements ProductService {
@@ -20,14 +21,21 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductResponse> getAllProducts() throws ProductNotFoundException {
+    public List<ProductResponse> getAllProducts() {
         var dbResponse =  productRepository.findAll();
         return EntityToResponseMapper.toProductResponse(dbResponse);
     }
 
     @Override
-    public ProductResponse getProductById(Integer id) throws ProductNotFoundException {
-        throw new UnsupportedOperationException();
+    public ProductResponse getProductById(UUID id) throws ProductNotFoundException {
+        var dbResponse = productRepository.findById(id).orElseThrow(ProductNotFoundException::new);
+        return EntityToResponseMapper.toProductResponse(dbResponse);
+    }
+
+    @Override
+    public ProductResponse getProductByName(String productName) throws ProductNotFoundException {
+        var dbResponse = productRepository.findByName(productName).orElseThrow(ProductNotFoundException::new);
+        return EntityToResponseMapper.toProductResponse(dbResponse);
     }
 
     @Override
@@ -38,12 +46,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public boolean deleteProductById(Integer id) {
-        throw new UnsupportedOperationException();
+    public boolean deleteProductById(UUID id) {
+        productRepository.deleteById(id);
+        return true;
     }
 
     @Override
-    public ProductResponse updateProductById(Integer id, ProductRequest productRequest) throws ProductNotFoundException {
-        throw new UnsupportedOperationException();
+    public ProductResponse updateProductById(UUID id, ProductRequest productRequest) throws ProductNotFoundException {
+        getProductById(id);
+        var entity = RequestToEntityMapper.toProductEntity(productRequest);
+        entity.setId(id);
+        var savedEntity = productRepository.save(entity);
+        return EntityToResponseMapper.toProductResponse(savedEntity);
     }
 }

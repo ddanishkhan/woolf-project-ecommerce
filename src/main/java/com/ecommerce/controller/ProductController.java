@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class ProductController {
@@ -22,13 +23,20 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<ProductResponse>> getAllProducts() throws ProductNotFoundException {
+    // This API does not fail, and returns empty list if no products are present.
+    public ResponseEntity<List<ProductResponse>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
     @GetMapping("/products/{id}")
-    public ResponseEntity<ProductResponse> getProduct(@PathVariable Integer id) throws ProductNotFoundException {
+    public ResponseEntity<ProductResponse> getProduct(@PathVariable UUID id) throws ProductNotFoundException {
         var product = productService.getProductById(id);
+        return ResponseEntity.ok(product);
+    }
+
+    @GetMapping("/products/name/{productName}")
+    public ResponseEntity<ProductResponse> getProductByName(@PathVariable String productName) throws ProductNotFoundException {
+        var product = productService.getProductByName(productName);
         return ResponseEntity.ok(product);
     }
 
@@ -39,13 +47,13 @@ public class ProductController {
     }
 
     @PutMapping("/products/{id}")
-    public ResponseEntity<ProductResponse> updateProductDetail(@PathVariable Integer id, @RequestBody ProductRequest productRequest) throws ProductNotFoundException {
+    public ResponseEntity<ProductResponse> updateProductDetail(@PathVariable UUID id, @RequestBody ProductRequest productRequest) throws ProductNotFoundException {
         var product = productService.updateProductById(id, productRequest);
         return ResponseEntity.ok(product);
     }
 
     @DeleteMapping("/products/{id}")
-    public ResponseEntity<Boolean> deleteProductById(@PathVariable Integer id) {
+    public ResponseEntity<Boolean> deleteProductById(@PathVariable UUID id) {
         var product = productService.deleteProductById(id);
         return ResponseEntity.ok(product);
     }

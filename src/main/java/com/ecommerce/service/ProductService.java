@@ -5,11 +5,13 @@ import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface ProductService {
-    List<ProductResponse> getAllProducts() throws ProductNotFoundException;
-    ProductResponse getProductById(Integer id)  throws ProductNotFoundException;
+    List<ProductResponse> getAllProducts();
+    ProductResponse getProductById(UUID id)  throws ProductNotFoundException;
+    ProductResponse getProductByName(String productName)  throws ProductNotFoundException;
     ProductResponse createNewProduct(ProductRequest productRequest);
-    boolean deleteProductById(Integer id);
-    ProductResponse updateProductById(Integer id, ProductRequest productRequest)  throws ProductNotFoundException;
+    boolean deleteProductById(UUID id);
+    ProductResponse updateProductById(UUID id, ProductRequest productRequest)  throws ProductNotFoundException;
 }

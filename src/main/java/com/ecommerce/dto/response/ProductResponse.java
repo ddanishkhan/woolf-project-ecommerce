@@ -8,4 +8,4 @@ import java.util.UUID;
 
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record ProductResponse(UUID id, String title, Double price, String category, String description, @JsonProperty("image") String imageURL) {}
+public record ProductResponse(UUID id, String name, Double price, String category, String description, @JsonProperty("image") String imageURL) {}
