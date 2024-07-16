@@ -17,7 +17,7 @@ public class ProductController {
     private final ProductService productService;
 
     @Autowired
-    public ProductController(@Qualifier("fakeStore") ProductService productService){
+    public ProductController(@Qualifier("productService") ProductService productService){
         this.productService = productService;
     }
 
