@@ -34,7 +34,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getProductByName(String productName) throws ProductNotFoundException {
-        var dbResponse = productRepository.findByName(productName).orElseThrow(ProductNotFoundException::new);
+        var dbResponse = productRepository.findByNameContaining(productName).orElseThrow(ProductNotFoundException::new);
         return EntityToResponseMapper.toProductResponse(dbResponse);
     }
 

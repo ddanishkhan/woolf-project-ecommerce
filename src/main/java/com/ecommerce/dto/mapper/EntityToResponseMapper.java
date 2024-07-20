@@ -12,7 +12,7 @@ public class EntityToResponseMapper {
     public static ProductResponse toProductResponse(ProductEntity product) {
         return ProductResponse.builder()
                 .id(product.getId())
-                .title(product.getName())
+                .name(product.getName())
                 .category(product.getCategory().getName())
                 .description(product.getDescription())
                 .price(product.getPrice())

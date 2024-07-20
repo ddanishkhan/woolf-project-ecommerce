@@ -2,6 +2,7 @@ package com.ecommerce.repository;
 
 import com.ecommerce.model.ProductEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,4 +20,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
     Optional<ProductEntity> findByPriceGreaterThanEqual(double price); // >= price
     Optional<ProductEntity> findByPriceGreaterThan(double price); // > price
     Optional<ProductEntity> findByPriceBetween(double startPrice, double endPrice);
+
+    @Query(value = CustomQueries.FIND_PRODUCT_BY_NAME, nativeQuery = true)
+    Optional<ProductEntity> findByNameContaining(String name);
 }
