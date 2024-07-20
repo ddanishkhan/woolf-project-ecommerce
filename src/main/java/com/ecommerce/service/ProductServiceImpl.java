@@ -53,7 +53,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse updateProductById(UUID id, ProductRequest productRequest) throws ProductNotFoundException {
-        getProductById(id);
+        getProductById(id); // Check if product exists before updating.
         var entity = RequestToEntityMapper.toProductEntity(productRequest);
         entity.setId(id);
         var savedEntity = productRepository.save(entity);

@@ -11,7 +11,7 @@ public class RequestToEntityMapper {
         category.setName(product.category());
 
         var productEntity = new ProductEntity();
-        productEntity.setName(product.title());
+        productEntity.setName(product.name());
         productEntity.setPrice(product.price());
         productEntity.setCategory(category);
         productEntity.setDescription(product.description());
