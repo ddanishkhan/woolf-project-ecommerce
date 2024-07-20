@@ -3,6 +3,7 @@ package com.ecommerce.service;
 import com.ecommerce.dto.mapper.EntityToResponseMapper;
 import com.ecommerce.dto.mapper.RequestToEntityMapper;
 import com.ecommerce.dto.request.ProductRequest;
+import com.ecommerce.dto.response.ProductListResponse;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.repository.ProductRepository;
@@ -21,7 +22,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductResponse> getAllProducts() {
+    public ProductListResponse getAllProducts() {
         var dbResponse =  productRepository.findAll();
         return EntityToResponseMapper.toProductResponse(dbResponse);
     }

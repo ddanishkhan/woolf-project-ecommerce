@@ -1,6 +1,7 @@
 package com.ecommerce.service;
 
 import com.ecommerce.dto.request.ProductRequest;
+import com.ecommerce.dto.response.ProductListResponse;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
 
@@ -8,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProductService {
-    List<ProductResponse> getAllProducts();
+    ProductListResponse getAllProducts();
     ProductResponse getProductById(UUID id)  throws ProductNotFoundException;
     ProductResponse getProductByName(String productName)  throws ProductNotFoundException;
     ProductResponse createNewProduct(ProductRequest productRequest);

@@ -1,5 +1,6 @@
 package com.ecommerce.dto.mapper;
 
+import com.ecommerce.dto.response.ProductListResponse;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.model.ProductEntity;
 
@@ -20,8 +21,9 @@ public class EntityToResponseMapper {
                 .build();
     }
 
-    public static List<ProductResponse> toProductResponse(List<ProductEntity> products) {
-        return products.stream().map(EntityToResponseMapper::toProductResponse).collect(Collectors.toCollection(ArrayList::new));
+    public static ProductListResponse toProductResponse(List<ProductEntity> products) {
+        var productListResponse = products.stream().map(EntityToResponseMapper::toProductResponse).collect(Collectors.toCollection(ArrayList::new));
+        return new ProductListResponse(productListResponse);
     }
 
 }

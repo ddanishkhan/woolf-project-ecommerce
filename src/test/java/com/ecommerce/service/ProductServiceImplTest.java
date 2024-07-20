@@ -46,7 +46,7 @@ class ProductServiceImplTest {
 
         var result = productService.getAllProducts();
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.products().size());
     }
 
     @Test

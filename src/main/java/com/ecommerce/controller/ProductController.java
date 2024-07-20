@@ -1,6 +1,7 @@
 package com.ecommerce.controller;
 
 import com.ecommerce.dto.request.ProductRequest;
+import com.ecommerce.dto.response.ProductListResponse;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.service.ProductService;
@@ -24,7 +25,7 @@ public class ProductController {
 
     @GetMapping("/products")
     // This API does not fail, and returns empty list if no products are present.
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+    public ResponseEntity<ProductListResponse> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
