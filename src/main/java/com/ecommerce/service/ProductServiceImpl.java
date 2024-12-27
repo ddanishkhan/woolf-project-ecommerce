@@ -9,7 +9,6 @@ import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service("productService")

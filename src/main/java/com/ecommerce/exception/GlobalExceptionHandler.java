@@ -11,6 +11,14 @@ import java.util.Optional;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(value = Exception.class)
+    public ResponseEntity<ErrorResponseDTO> defaultException(Exception ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO();
+        errorResponse.setMessage(Optional.ofNullable(ex.getMessage()).orElse("Internal Server Error"));
+        errorResponse.setMessageCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     /**
      * Provides handling for exceptions throughout this service.
      */
