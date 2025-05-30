@@ -1,4 +1,4 @@
-../user-authentication-service/HELP.md
+../user-management-service/HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
