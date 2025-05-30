@@ -1,0 +1,9 @@
+services:
+  product-catalog-mysql:
+    image: mysql:9.3
+    container_name: product-catalog-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: strong_password
+    ports:
+      - "3308:3306"
+    restart: unless-stopped
