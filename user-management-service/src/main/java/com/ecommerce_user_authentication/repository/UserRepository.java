@@ -1,12 +1,22 @@
 package com.ecommerce_user_authentication.repository;
 
-import com.ecommerce_user_authentication.model.UserEntity;
-import org.springframework.data.repository.CrudRepository;
+import com.ecommerce_user_authentication.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends CrudRepository<UserEntity, Long> {
-    Optional<UserEntity> findOneByEmail(String email);
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsername(String username);
+
+    Optional<User> findByProviderId(String providerId); // To find users by their OAuth provider ID
+
+    Boolean existsByUsername(String username);
+
+    Boolean existsByEmail(String email);
 }
+

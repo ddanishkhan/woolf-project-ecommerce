@@ -1,101 +1,140 @@
 package com.ecommerce_user_authentication.service;
 
-import com.ecommerce_user_authentication.dto.response.UserInfoResponse;
-import com.ecommerce_user_authentication.exception.InvalidRoleException;
-import com.ecommerce_user_authentication.exception.UserNotFoundException;
-import com.ecommerce_user_authentication.model.RoleEntity;
-import com.ecommerce_user_authentication.model.RoleEnum;
-import com.ecommerce_user_authentication.model.UserEntity;
+import com.ecommerce_user_authentication.exception.UserAlreadyExistsException;
+import com.ecommerce_user_authentication.model.AuthProvider;
+import com.ecommerce_user_authentication.model.ERole;
+import com.ecommerce_user_authentication.model.PasswordResetToken;
+import com.ecommerce_user_authentication.model.Role;
+import com.ecommerce_user_authentication.model.User;
+import com.ecommerce_user_authentication.repository.PasswordResetTokenRepository;
 import com.ecommerce_user_authentication.repository.RoleRepository;
-import com.ecommerce_user_authentication.repository.SessionRepository;
+import com.ecommerce_user_authentication.repository.UserActiveTokenRepository;
 import com.ecommerce_user_authentication.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService implements UserDetailsService {
+public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final SessionRepository sessionRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final UserActiveTokenRepository userActiveTokenRepository;
 
-    public Optional<UserInfoResponse> getUserDetails(Long userId) {
-        var userEntity = userRepository.findById(userId);
-        return userEntity.map(UserInfoResponse::from);
+    @Autowired
+    public void setPasswordEncoder(@Lazy PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public Optional<UserInfoResponse> getUserDetailsByUserEmail(String email) {
-        var userEntity = userRepository.findOneByEmail(email);
-        return userEntity.map(UserInfoResponse::from);
+    @Lazy private PasswordEncoder passwordEncoder;
+
+    @Transactional
+    public User processOAuth2User(String providerId, String email, String name, String oauthProviderName) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        User user;
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+            if (user.getProvider() == AuthProvider.LOCAL) {
+                log.info("User with email {} already exists with LOCAL provider. Linking OAuth account.", email);
+            }
+            if (user.getProviderId() == null || !user.getProviderId().equals(providerId)) {
+                user.setProviderId(providerId);
+            }
+            user.setProvider(AuthProvider.valueOf(oauthProviderName.toUpperCase()));
+            user.setDisplayName(name);
+        } else {
+            user = new User();
+            user.setEmail(email);
+            user.setDisplayName(name);
+            user.setProvider(AuthProvider.valueOf(oauthProviderName.toUpperCase()));
+            user.setProviderId(providerId);
+            String username = email.split("@")[0] + "_" + oauthProviderName.toLowerCase().replaceAll("[^a-zA-Z0-9_]", "");
+            if (Boolean.TRUE.equals(userRepository.existsByUsername(username))) {
+                username = username + "_" + UUID.randomUUID().toString().substring(0, 4);
+            }
+            user.setUsername(username);
+            Set<Role> roles = new HashSet<>();
+            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Error: Role ROLE_USER is not found."));
+            roles.add(userRole);
+            user.setRoles(roles);
+        }
+        return userRepository.save(user);
     }
 
     @Transactional
-    public UserInfoResponse setUserRole(Long userId, Set<RoleEnum> roles) {
-
-        // User cannot update his own role.
-        var currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        var currentUser = userRepository.findOneByEmail(currentUserEmail).orElseThrow();
-        if (userId.equals(currentUser.getId())) {
-            throw new InvalidRoleException("You cannot update your own role.");
+    public User registerNewUser(String username, String email, String password, String displayName) {
+        if (Boolean.TRUE.equals(userRepository.existsByUsername(username))) {
+            throw new UserAlreadyExistsException("Username already exists: " + username);
         }
+        if (Boolean.TRUE.equals(userRepository.existsByEmail(email))) {
+            throw new UserAlreadyExistsException("Email already exists: " + email);
+        }
+        User newUser = new User();
+        newUser.setUsername(username);
+        newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(password));
+        newUser.setDisplayName(displayName);
+        newUser.setProvider(AuthProvider.LOCAL);
+        Set<Role> roles = new HashSet<>();
+        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Error: Role ROLE_USER is not found. Make sure it's initialized."));
+        roles.add(userRole);
+        newUser.setRoles(roles);
+        return userRepository.save(newUser);
+    }
 
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        Set<RoleEntity> rolesEntity = validatedRoles(roles);
-        user.setRoleEntity(rolesEntity);
+    @Transactional(readOnly = true)
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
+
+    @Transactional
+    public String createPasswordResetTokenForUser(User user) {
+        passwordResetTokenRepository.findByUser(user).ifPresent(passwordResetTokenRepository::delete);
+        PasswordResetToken myToken = new PasswordResetToken(user);
+        passwordResetTokenRepository.save(myToken);
+        return myToken.getToken();
+    }
+
+    public Optional<PasswordResetToken> getPasswordResetToken(String token) {
+        return passwordResetTokenRepository.findByToken(token);
+    }
+
+    @Transactional
+    public void changeUserPassword(User user, String newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        UserEntity updatedUser = userRepository.findById(userId).orElseThrow();
 
-        // Invalidate the existing tokens for the updated user.
-        sessionRepository.deactivateUpdatedUser(userId);
-
-        return UserInfoResponse.from(updatedUser);
+        // Invalidate all active tokens for this user
+        tokenBlacklistService.revokeAllTokensForUser(user);
+        log.info("Password for user {} changed. All active JWTs have been revoked.", user.getUsername());
     }
 
-    public Set<RoleEntity> validatedRoles(Set<RoleEnum> selectedRoles) {
-        // Fetch all roles from the database that match the selected roles
-        Set<RoleEntity> roleEntities = roleRepository.findByNameIn(selectedRoles);
-
-        // Extract role names from the fetched RoleEntity objects
-        Set<RoleEnum> foundRoles = roleEntities.stream()
-                .map(RoleEntity::getName)
-                .collect(Collectors.toSet());
-
-        // Check if any of the selected roles are missing
-        selectedRoles.removeAll(foundRoles);
-        if (!selectedRoles.isEmpty()) {
-            throw new InvalidRoleException("Roles not found: " + selectedRoles);
-        }
-
-        return roleEntities;
+    @Scheduled(cron = "0 0 0 * * ?") // Run daily at midnight
+    @Transactional
+    public void purgeExpiredPasswordResetTokens() {
+        passwordResetTokenRepository.deleteByExpiryDateBefore(new Date());
+        log.info("Purged expired password reset tokens.");
     }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var userOpt = userRepository.findOneByEmail(username);
-        if (userOpt.isPresent()){
-            UserEntity user = userOpt.get();
-            return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), getAuthority(user));
-        }
-        throw new UsernameNotFoundException("Invalid username or password.");
-    }
-
-    private Set<SimpleGrantedAuthority> getAuthority(UserEntity user) {
-        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        user.getRoleEntity().forEach(
-                role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
-        return authorities;
-    }
-
 }
