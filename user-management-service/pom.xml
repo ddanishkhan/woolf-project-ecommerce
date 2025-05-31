@@ -9,7 +9,7 @@
 		<relativePath/>
 	</parent>
 	<groupId>com</groupId>
-	<artifactId>user-management</artifactId>
+	<artifactId>usermanagement</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>ecommerce-user-management</name>
 	<description>Handles user registration, login, profile management, and password reset.</description>
