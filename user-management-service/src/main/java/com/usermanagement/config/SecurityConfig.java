@@ -70,10 +70,9 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                // No need for .authenticationManager(...) here if relying on the global bean from AuthenticationConfiguration
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/error", "/login", "/oauth2/**", "/auth/**").permitAll()
+                        .requestMatchers("/", "/error", "/login", "/oauth2/**", "/auth/**", "/swagger-ui/**","/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
