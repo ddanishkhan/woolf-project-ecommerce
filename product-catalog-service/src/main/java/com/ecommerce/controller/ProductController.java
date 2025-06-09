@@ -28,8 +28,8 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<ProductListResponse> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<ProductListResponse> getAllProducts(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(productService.getAllProducts(page, size));
     }
 
     @GetMapping("/products/{id}")
@@ -77,21 +77,21 @@ public class ProductController {
 
 
     @PostMapping("/products")
-    @PreAuthorize("hasRole('ADMIN')") // Example: Only admins can create products
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponse> addNewProduct(@RequestBody ProductRequest productRequestBody) {
         var product = productService.createNewProduct(productRequestBody);
         return ResponseEntity.status(HttpStatus.CREATED).body(product); // Return 201 Created
     }
 
     @PutMapping("/products/{id}")
-    @PreAuthorize("hasRole('ADMIN')") // Example: Only admins can update products
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponse> updateProductDetail(@PathVariable UUID id, @RequestBody ProductRequest productRequest) throws ProductNotFoundException {
         var product = productService.updateProductById(id, productRequest);
         return ResponseEntity.ok(product);
     }
 
     @DeleteMapping("/products/{id}")
-    @PreAuthorize("hasRole('ADMIN')") // Example: Only admins can delete products
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProductById(@PathVariable UUID id) throws ProductNotFoundException {
         productService.deleteProductById(id);
         return ResponseEntity.noContent().build(); // Return 204 No Content

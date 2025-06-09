@@ -28,12 +28,12 @@ public class EntityToResponseMapper {
     }
 
     // From List<ProductEntity> (JPA) to ProductListResponse
-    public static ProductListResponse toProductResponse(List<ProductEntity> products) {
-        if (products == null) return new ProductListResponse(new ArrayList<>());
+    public static ProductListResponse toProductResponse(List<ProductEntity> products, Integer totalPages, Long totalElements) {
+        if (products == null) return new ProductListResponse(new ArrayList<>(), 0, 0L);
         var productListResponse = products.stream()
                 .map(EntityToResponseMapper::toProductResponse)
                 .collect(Collectors.toCollection(ArrayList::new));
-        return new ProductListResponse(productListResponse);
+        return new ProductListResponse(productListResponse, totalPages, totalElements);
     }
 
     // From ProductDocument (Elasticsearch) to ProductResponse

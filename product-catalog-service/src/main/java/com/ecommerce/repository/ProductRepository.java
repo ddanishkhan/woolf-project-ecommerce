@@ -1,6 +1,8 @@
 package com.ecommerce.repository;
 
 import com.ecommerce.model.ProductEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -11,7 +13,7 @@ import java.util.UUID;
 
 @Repository
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
-    List<ProductEntity> findAll();
+    Page<ProductEntity> findAll(Pageable pageable);
     Optional<ProductEntity> findByName(String name);
     Optional<ProductEntity> findByNameAndDescription(String name, String description); // select * from Product where name = ? and description = ?
     Optional<ProductEntity> findByNameOrDescription(String name, String description); // select * from Product where name = ? or description = ?

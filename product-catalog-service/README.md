@@ -7,9 +7,8 @@ Manages product listings, details, categorization.
    2. Paste the generated API Key in application.properties file under `spring.elasticsearch.api-key`
 2. Execute `docker compose up -d` :
    1. Get MySQL Database up and running on local using docker:
-      1. https://hub.docker.com/_/mysql
-   2. Kafka on Local
-      1. https://developer.confluent.io/confluent-tutorials/kafka-on-docker/
+      1. Extra read: https://hub.docker.com/_/mysql
+
 
 
 Package has MVC like structure:   
@@ -29,10 +28,6 @@ Project could use PostgreSql via Docker, as below
 `docker pull postgres:16.2`  
 `docker image ls`
 `docker run –-name ecommerce -e POSTGRES_PASSWORD=password -p 5433:5432 postgres`
-
-Project could use MySQL database via Docker
-`docker pull mysql:9.0`
-`docker run -d --name ecommerce-product -e MYSQL_ROOT_PASSWORD=strong_password -p 3307:3306 mysql:9.0`
 
 `run`: creates a new container or starts an existing one  
 `--name CONTAINER_NAME`: gives the container a name. The name should be readable and short. In our case, the name is test-mysql.  

@@ -69,7 +69,7 @@ public class UserService {
             }
             user.setUsername(username);
             Set<Role> roles = new HashSet<>();
-            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+            Role userRole = roleRepository.findByName(ERole.USER)
                     .orElseThrow(() -> new RuntimeException("Error: Role ROLE_USER is not found."));
             roles.add(userRole);
             user.setRoles(roles);
@@ -92,7 +92,7 @@ public class UserService {
         newUser.setDisplayName(displayName);
         newUser.setProvider(AuthProvider.LOCAL);
         Set<Role> roles = new HashSet<>();
-        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+        Role userRole = roleRepository.findByName(ERole.USER)
                 .orElseThrow(() -> new RuntimeException("Error: Role ROLE_USER is not found. Make sure it's initialized."));
         roles.add(userRole);
         newUser.setRoles(roles);

@@ -12,6 +12,8 @@ import com.ecommerce.model.ProductEntity;
 import com.ecommerce.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +36,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductListResponse getAllProducts() {
+    public ProductListResponse getAllProducts(int page, int size) {
         // listing all products, from the primary DB (JPA)
-        var dbResponse =  productRepository.findAll();
-        return EntityToResponseMapper.toProductResponse(dbResponse);
+        Pageable pageable = PageRequest.of(page, size);
+        var dbResponse =  productRepository.findAll(pageable);
+        return EntityToResponseMapper.toProductResponse(dbResponse.getContent(), dbResponse.getTotalPages(), dbResponse.getTotalElements());
     }
 
     @Override

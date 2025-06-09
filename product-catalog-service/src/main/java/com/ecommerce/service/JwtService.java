@@ -8,12 +8,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +23,7 @@ import javax.crypto.SecretKey;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
@@ -40,6 +41,15 @@ public class JwtService {
     @Autowired
     public JwtService(JwtAuthenticationServer authenticationServer) {
         this.authenticationServer = authenticationServer;
+    }
+
+    @Getter
+    private SecretKey jwtSecretKey;
+
+    @PostConstruct
+    protected void init() {
+        byte[] keyBytes = secretKey.getBytes();
+        this.jwtSecretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractUsername(String token) {
@@ -65,7 +75,7 @@ public class JwtService {
         final String username = extractUsername(token);
         var response = authenticationServer.validateToken(new TokenAuthenticationRequest(token, username));
         if (response.getBody() != null) {
-            return response.getBody().sessionStatus().equals("ACTIVE");
+            return response.getBody().valid();
         }
         log.error("Session status could not be validated {}", response.getBody());
         return false;
@@ -78,21 +88,16 @@ public class JwtService {
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parser()
-                .verifyWith(getSignInKey())
+                .verifyWith(jwtSecretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
     }
 
-    SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
     public CustomJWTAuthentication getAuthenticationToken(String token) {
 
         final JwtParser jwtParser = Jwts.parser()
-                .verifyWith(getSignInKey())
+                .verifyWith(jwtSecretKey)
                 .build();
 
         final Jws<Claims> claimsJws = jwtParser.parseSignedClaims(token);
@@ -101,8 +106,9 @@ public class JwtService {
 
         String email = claims.getSubject();
 
+        List<String> roles = claims.get(authoritiesKey, List.class);
         final Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(authoritiesKey).toString().split(","))
+                roles.stream()
                         .map(SimpleGrantedAuthority::new)
                         .toList();
 

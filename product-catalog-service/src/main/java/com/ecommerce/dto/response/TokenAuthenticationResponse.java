@@ -1,4 +1,11 @@
 package com.ecommerce.dto.response;
 
-public record TokenAuthenticationResponse(String sessionStatus) {
-}
+import java.util.List;
+
+public record TokenAuthenticationResponse(
+        boolean valid,
+        List<String> authorities,
+        String jti,
+        String username
+) {}
+

@@ -5,6 +5,7 @@ import com.usermanagement.dto.JwtAuthenticationResponse;
 import com.usermanagement.dto.LoginRequest;
 import com.usermanagement.dto.RegisterRequest;
 import com.usermanagement.dto.ResetPasswordRequest;
+import com.usermanagement.dto.response.MessageResponse;
 import com.usermanagement.model.PasswordResetToken;
 import com.usermanagement.model.User;
 import com.usermanagement.repository.PasswordResetTokenRepository;
@@ -86,8 +87,7 @@ public class AuthController {
                 registerRequest.getPassword(),
                 registerRequest.getDisplayName()
         );
-        return ResponseEntity.ok("User registered successfully! Please login.");
-
+        return ResponseEntity.ok(new MessageResponse("User registered successfully! Please login."));
     }
 
     @PostMapping("/logout")
@@ -103,14 +103,14 @@ public class AuthController {
             if (user != null) {
                 tokenBlacklistService.revokeAllTokensForUser(user);
                 // SecurityContextHolder.clearContext(); // Good practice for stateless apps too
-                return ResponseEntity.ok("User logged out successfully. All active tokens have been revoked.");
+                return ResponseEntity.ok(new MessageResponse("User logged out successfully. All active tokens have been revoked."));
             } else {
                 // This case should be rare if the token was valid to get username
                 // Fallback: blacklist only the current token if user not found (though this indicates an issue)
                 String jti = jwtTokenProvider.getJtiFromJWT(jwt);
                 java.util.Date expiryDate = jwtTokenProvider.getExpirationDateFromJWT(jwt);
                 tokenBlacklistService.addToBlacklist(jti, expiryDate);
-                return ResponseEntity.ok("Logged out. Current token blacklisted (user context not fully resolved).");
+                return ResponseEntity.ok(new MessageResponse("Logged out. Current token blacklisted (user context not fully resolved)."));
             }
 
         }
@@ -122,33 +122,33 @@ public class AuthController {
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
         User user = userService.findByEmail(forgotPasswordRequest.getEmail());
         if (user == null) {
-            return ResponseEntity.ok("If an account with this email exists, a password reset link has been sent.");
+            return ResponseEntity.ok(new MessageResponse("If an account with this email exists, a password reset link has been sent."));
         }
         String token = userService.createPasswordResetTokenForUser(user);
         String resetLink = "https://yourapp.com/reset-password?token=" + token;
         log.info("Password Reset Link (for user {}): {}", user.getEmail(), resetLink);
-        return ResponseEntity.ok("If an account with this email exists, a password reset link has been sent.");
+        return ResponseEntity.ok(new MessageResponse("If an account with this email exists, a password reset link has been sent."));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
         Optional<PasswordResetToken> tokenOptional = userService.getPasswordResetToken(resetPasswordRequest.getToken());
         if (tokenOptional.isEmpty()) {
-            return ResponseEntity.badRequest().body("Invalid or missing password reset token.");
+            return ResponseEntity.badRequest().body(new MessageResponse("Invalid or missing password reset token."));
         }
         PasswordResetToken resetToken = tokenOptional.get();
         if (resetToken.isExpired()) {
             passwordResetTokenRepository.delete(resetToken);
-            return ResponseEntity.badRequest().body("Password reset token has expired.");
+            return ResponseEntity.badRequest().body(new MessageResponse("Password reset token has expired."));
         }
         if (resetToken.isUsed()) {
-            return ResponseEntity.badRequest().body("Password reset token has already been used.");
+            return ResponseEntity.badRequest().body(new MessageResponse("Password reset token has already been used."));
         }
         User user = resetToken.getUser();
         userService.changeUserPassword(user, resetPasswordRequest.getNewPassword()); // This now revokes all tokens
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
-        return ResponseEntity.ok("Password has been successfully reset. All previous sessions have been invalidated.");
+        return ResponseEntity.ok(new MessageResponse("Password has been successfully reset. All previous sessions have been invalidated."));
     }
 
     private String extractJwtFromRequest(HttpServletRequest request) {

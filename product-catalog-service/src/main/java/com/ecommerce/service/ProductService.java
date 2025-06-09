@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProductService {
-    ProductListResponse getAllProducts();
+    ProductListResponse getAllProducts(int page, int size);
     ProductResponse getProductById(UUID id)  throws ProductNotFoundException;
     ProductResponse getProductByNameFromDb(String productName)  throws ProductNotFoundException;
     ProductResponse createNewProduct(ProductRequest productRequest);
