@@ -57,7 +57,7 @@ public class TokenValidationController {
                 }
 
                 // Proceed with full validation if not blacklisted
-                if (jwtTokenProvider.validateToken(jwt)) { // This will throw specific exceptions on failure
+                if (jwtTokenProvider.validateToken(jwt)) {
                     String username = jwtTokenProvider.getUsernameFromJWT(jwt);
                     List<GrantedAuthority> authorities = jwtTokenProvider.getAuthoritiesFromJWT(jwt);
                     List<String> roles = authorities.stream()
@@ -83,7 +83,7 @@ public class TokenValidationController {
             } catch (ExpiredJwtException ex) {
                 response.put("valid", false);
                 response.put("error", "Expired JWT token");
-                response.put("jti", ex.getClaims().getId()); // JTI might still be available from expired token
+                response.put("jti", ex.getClaims().getId());
                 response.put("expiredAt", ex.getClaims().getExpiration());
             } catch (SignatureException ex) {
                 response.put("valid", false);

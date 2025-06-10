@@ -1,7 +1,7 @@
 package com.usermanagement.controller;
 
 import com.usermanagement.dto.ForgotPasswordRequest;
-import com.usermanagement.dto.JwtAuthenticationResponse;
+import com.usermanagement.dto.response.JwtAuthenticationResponse;
 import com.usermanagement.dto.LoginRequest;
 import com.usermanagement.dto.RegisterRequest;
 import com.usermanagement.dto.ResetPasswordRequest;

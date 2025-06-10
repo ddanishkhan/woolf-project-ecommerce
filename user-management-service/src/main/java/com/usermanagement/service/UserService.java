@@ -1,6 +1,9 @@
 package com.usermanagement.service;
 
+import com.usermanagement.dto.UpdateProfileRequest;
+import com.usermanagement.dto.response.ProfileResponse;
 import com.usermanagement.exception.UserAlreadyExistsException;
+import com.usermanagement.exception.UserNotFoundException;
 import com.usermanagement.model.AuthProvider;
 import com.usermanagement.model.ERole;
 import com.usermanagement.model.PasswordResetToken;
@@ -24,6 +27,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -107,6 +111,37 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
+    }
+
+    public ProfileResponse getUserProfileByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+        return mapUserToProfileResponse(user);
+    }
+
+    public ProfileResponse updateUserProfileByEmail(String email, UpdateProfileRequest updateProfileRequest) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+        user.setDisplayName(updateProfileRequest.getName());
+        User updatedUser = userRepository.save(user);
+        return mapUserToProfileResponse(updatedUser);
+    }
+
+    /**
+     * Helper method to map a User entity to a ProfileResponse DTO.
+     * @param user The User entity to map.
+     * @return The corresponding ProfileResponse DTO.
+     */
+    private ProfileResponse mapUserToProfileResponse(User user) {
+        ProfileResponse response = new ProfileResponse();
+        response.setId(user.getId().toString());
+        response.setName(user.getDisplayName());
+        response.setEmail(user.getEmail());
+        response.setProvider(user.getProvider().toString());
+        response.setRoles(user.getRoles().stream()
+                .map(role -> role.getName().toString())
+                .collect(Collectors.toSet()));
+        return response;
     }
 
     @Transactional

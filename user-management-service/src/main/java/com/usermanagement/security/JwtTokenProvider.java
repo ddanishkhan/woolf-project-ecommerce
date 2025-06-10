@@ -58,6 +58,7 @@ public class JwtTokenProvider {
                 .id(jti)
                 .claim("name", name)
                 .claim("roles", roles)
+                .claim("email", user.getEmail())
                 .subject(user.getUsername())
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -128,6 +129,17 @@ public class JwtTokenProvider {
     public boolean validateToken(String authToken) {
         Jwts.parser().verifyWith(jwtSecretKey).build().parseSignedClaims(authToken);
         return true;
+    }
+
+
+    public String getEmailFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(jwtSecretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return (String) claims.get("email");
     }
 
 }
