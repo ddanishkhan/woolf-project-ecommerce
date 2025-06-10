@@ -71,6 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     CustomJWTAuthentication authToken = jwtService.getAuthenticationToken(jwt);
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
+                    log.error("Token session invalid.");
                     throw new AuthenticationException("Unauthorized");
                 }
             }

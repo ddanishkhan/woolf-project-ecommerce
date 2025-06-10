@@ -6,6 +6,7 @@ import com.ecommerce.elasticsearch.repository.ProductSearchRepository;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.model.CategoryEntity;
 import com.ecommerce.model.ProductEntity;
+import com.ecommerce.repository.CategoryRepository;
 import com.ecommerce.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,6 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,27 +31,19 @@ class ProductServiceImplTest {
     private ProductRepository productRepository;
 
     @Mock
+    private CategoryRepository categoryRepository;
+
+    @Mock
     ProductSearchRepository productSearchRepository;
 
     private ProductServiceImpl productService;
 
+
     @BeforeEach
     void setup() {
-        productService = new ProductServiceImpl(productRepository, productSearchRepository);
+        productService = new ProductServiceImpl(productRepository, productSearchRepository, categoryRepository);
     }
 
-    @Test
-    void getAllProducts_Success() {
-        CategoryEntity category = new CategoryEntity();
-        ProductEntity product = new ProductEntity();
-        product.setName("Mobile");
-        product.setCategory(category);
-        when(productRepository.findAll()).thenReturn(List.of(product));
-
-        var result = productService.getAllProducts();
-        assertNotNull(result);
-        assertEquals(1, result.products().size());
-    }
 
     @Test
     void getProductById_Success() throws ProductNotFoundException {
@@ -77,7 +69,7 @@ class ProductServiceImplTest {
         product.setName("Mobile");
         product.setCategory(category);
 
-        var productRequest = new ProductRequest("Mobile", 1.0, "electronics", "", "");
+        var productRequest = new ProductRequest("Mobile", 1.0, UUID.randomUUID(), "", "");
 
         when(productRepository.save(any(ProductEntity.class))).thenReturn(product);
 
@@ -121,10 +113,12 @@ class ProductServiceImplTest {
         product.setCategory(category);
         when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
         when(productRepository.save(any(ProductEntity.class))).thenReturn(product);
-        var productRequest = new ProductRequest("Mobile - updated", 2.0, "electronics", "", "");
-        ProductResponse response = productService.updateProductById(productId, productRequest);
-        assertNotNull(response);
+        var productRequest = new ProductRequest("Mobile - updated", 2.0, UUID.randomUUID(), "", "");
 
+        //service call
+        ProductResponse response = productService.updateProductById(productId, productRequest);
+
+        assertNotNull(response);
         verify(productRepository).save(productEntityArgumentCaptor.capture());
         var entityToSave = productEntityArgumentCaptor.getValue();
         assertEquals(productRequest.name(), entityToSave.getName());

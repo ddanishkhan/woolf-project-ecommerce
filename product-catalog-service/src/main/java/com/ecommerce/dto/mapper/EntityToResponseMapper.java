@@ -1,18 +1,17 @@
 package com.ecommerce.dto.mapper;
 
-import com.ecommerce.dto.response.ProductListResponse;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.elasticsearch.model.ProductDocument;
 import com.ecommerce.model.ProductEntity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class EntityToResponseMapper {
 
-    private EntityToResponseMapper(){};
+    private EntityToResponseMapper(){}
 
     // From ProductEntity (JPA) to ProductResponse
     public static ProductResponse toProductResponse(ProductEntity product) {
@@ -28,12 +27,11 @@ public class EntityToResponseMapper {
     }
 
     // From List<ProductEntity> (JPA) to ProductListResponse
-    public static ProductListResponse toProductResponse(List<ProductEntity> products, Integer totalPages, Long totalElements) {
-        if (products == null) return new ProductListResponse(new ArrayList<>(), 0, 0L);
-        var productListResponse = products.stream()
+    public static List<ProductResponse> toProductResponse(List<ProductEntity> products) {
+        if (products == null) return Collections.emptyList();
+        return products.stream()
                 .map(EntityToResponseMapper::toProductResponse)
-                .collect(Collectors.toCollection(ArrayList::new));
-        return new ProductListResponse(productListResponse, totalPages, totalElements);
+                .toList();
     }
 
     // From ProductDocument (Elasticsearch) to ProductResponse

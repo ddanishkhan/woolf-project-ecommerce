@@ -10,14 +10,11 @@ public class RequestToEntityMapper {
         // static methods only
     }
 
-    public static ProductEntity toProductEntity(ProductRequest product) {
-        var category = new CategoryEntity();
-        category.setName(product.category());
-
+    public static ProductEntity toProductEntity(ProductRequest product, CategoryEntity categoryEntity) {
         var productEntity = new ProductEntity();
         productEntity.setName(product.name());
         productEntity.setPrice(product.price());
-        productEntity.setCategory(category);
+        productEntity.setCategory(categoryEntity);
         productEntity.setDescription(product.description());
         productEntity.setCoverImageURL(product.imageURL());
         return productEntity;

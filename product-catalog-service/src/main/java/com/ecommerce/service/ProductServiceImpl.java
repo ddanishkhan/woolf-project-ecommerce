@@ -1,46 +1,51 @@
 package com.ecommerce.service;
 
+import com.ecommerce.dto.CustomPageDTO;
 import com.ecommerce.dto.mapper.EntityToResponseMapper;
 import com.ecommerce.dto.mapper.RequestToEntityMapper;
 import com.ecommerce.dto.request.ProductRequest;
-import com.ecommerce.dto.response.ProductListResponse;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.elasticsearch.model.ProductDocument;
 import com.ecommerce.elasticsearch.repository.ProductSearchRepository;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.model.ProductEntity;
+import com.ecommerce.repository.CategoryRepository;
 import com.ecommerce.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service("productService")
 @Slf4j
 public class ProductServiceImpl implements ProductService {
+    private final CategoryRepository categoryRepository;
 
     private final ProductRepository productRepository;
     private final ProductSearchRepository productSearchRepository; // Elasticsearch repository
 
     @Autowired
     public ProductServiceImpl(ProductRepository productRepository,
-                              ProductSearchRepository productSearchRepository) {
+                              ProductSearchRepository productSearchRepository,
+                              CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
         this.productSearchRepository = productSearchRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
-    public ProductListResponse getAllProducts(int page, int size) {
-        // listing all products, from the primary DB (JPA)
+    public CustomPageDTO<ProductResponse> getAllProducts(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        var dbResponse =  productRepository.findAll(pageable);
-        return EntityToResponseMapper.toProductResponse(dbResponse.getContent(), dbResponse.getTotalPages(), dbResponse.getTotalElements());
+        // listing all products, from the primary DB (JPA)
+        Page<ProductEntity> productEntityPage = productRepository.findAll(pageable);
+        var res = EntityToResponseMapper.toProductResponse(productEntityPage.getContent());
+        return new CustomPageDTO<>(res, productEntityPage);
     }
 
     @Override
@@ -61,10 +66,11 @@ public class ProductServiceImpl implements ProductService {
     @Transactional // Ensures atomicity for DB save, Elasticsearch index, and Kafka send
     public ProductResponse createNewProduct(ProductRequest productRequest) {
         log.debug("Attempting to create new product: {}", productRequest.name());
-        var entity = RequestToEntityMapper.toProductEntity(productRequest);
-        // Ensure category is managed correctly if it's a separate entity and needs to be persisted or fetched.
-        // For simplicity, assuming category name is directly set.
 
+        var category = categoryRepository.findById(productRequest.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("invalid category " + productRequest.categoryId()));
+
+        var entity = RequestToEntityMapper.toProductEntity(productRequest, category);
         ProductEntity savedEntity = productRepository.save(entity);
         log.info("Product saved to DB with ID: {}", savedEntity.getId());
 
@@ -109,11 +115,11 @@ public class ProductServiceImpl implements ProductService {
         existingEntity.setDescription(productRequest.description());
         existingEntity.setPrice(productRequest.price());
         existingEntity.setCoverImageURL(productRequest.imageURL());
-        // Handle category update - might need to fetch/create CategoryEntity if it's complex
-        if (existingEntity.getCategory() == null || !existingEntity.getCategory().getName().equals(productRequest.category())) {
-            com.ecommerce.model.CategoryEntity category = new com.ecommerce.model.CategoryEntity();
-            category.setName(productRequest.category());
-            existingEntity.setCategory(category); // Assuming cascade will handle saving category if new
+        // Handle category update
+        if (!existingEntity.getCategory().getId().equals(productRequest.categoryId())) {
+            var category = categoryRepository.findById(productRequest.categoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found " + productRequest.categoryId()));
+            existingEntity.setCategory(category);
         }
 
         ProductEntity savedEntity = productRepository.save(existingEntity);
@@ -127,35 +133,5 @@ public class ProductServiceImpl implements ProductService {
         return EntityToResponseMapper.toProductResponse(savedEntity);
     }
 
-    // --- Elasticsearch Search Methods ---
 
-    @Override
-    public List<ProductResponse> searchProductsByName(String name) {
-        log.debug("Searching products by name in Elasticsearch: {}", name);
-        List<ProductDocument> documents = productSearchRepository.findByNameContainingIgnoreCase(name);
-        return documents.stream()
-                .map(EntityToResponseMapper::toProductResponse) // Reusing existing mapper
-                .toList();
-    }
-
-    @Override
-    public List<ProductResponse> searchProductsByCategory(String category) {
-        log.debug("Searching products by category in Elasticsearch: {}", category);
-        List<ProductDocument> documents = productSearchRepository.findByCategory(category);
-        return documents.stream()
-                .map(EntityToResponseMapper::toProductResponse)
-                .toList();
-    }
-
-    /**
-     * This is a simple OR search on name and description.
-     **/
-    @Override
-    public List<ProductResponse> searchProductsByKeyword(String keyword) {
-        log.debug("Searching products by keyword in Elasticsearch: {}", keyword);
-        List<ProductDocument> documents = productSearchRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
-        return documents.stream()
-                .map(EntityToResponseMapper::toProductResponse)
-                .toList();
-    }
 }

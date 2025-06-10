@@ -20,6 +20,7 @@ public class SecurityConfig {
     protected static final String[] PERMITTED_GET_URLS = {
             "/products/**",
             "/products/search/**",
+            "/categories/**"
     };
 
     protected static final String[] PERMITTED_URLS = {

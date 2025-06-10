@@ -2,6 +2,9 @@ package com.ecommerce.elasticsearch.repository;
 
 
 import com.ecommerce.elasticsearch.model.ProductDocument;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,7 +21,24 @@ public interface ProductSearchRepository extends ElasticsearchRepository<Product
     // Find products by name OR description
     List<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String name, String description);
 
-    // For more complex queries, use @Query annotation with Elasticsearch Query DSL
-    // @Query("{\"bool\": {\"must\": [{\"match\": {\"name\": \"?0\"}}, {\"match\": {\"category\": \"?1\"}}]}}")
-    // List<ProductDocument> findByNameAndCategory(String name, String category);
+    /**
+     * Performs a multi-match fuzzy search across the name and description fields.
+     * The '?0' placeholder is replaced by the first method parameter (query).
+     *
+     * @param query The search term to find.
+     * @param pageable Pagination information.
+     * @return A page of matching product documents.
+     */
+    @Query("""
+            {
+              "multi_match": {
+                "query": "?0",
+                "fields": [
+                  "name",
+                  "description"
+                ],
+                "fuzziness": "AUTO"
+              }
+            }""")
+    Page<ProductDocument> searchFuzzyInNameAndDescription(String query, Pageable pageable);
 }

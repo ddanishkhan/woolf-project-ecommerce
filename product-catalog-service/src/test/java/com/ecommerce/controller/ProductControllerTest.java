@@ -1,10 +1,9 @@
 package com.ecommerce.controller;
 
+import com.ecommerce.dto.CustomPageDTO;
 import com.ecommerce.dto.request.ProductRequest;
-import com.ecommerce.dto.response.ProductListResponse;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
-import com.ecommerce.external.api.auth.JwtAuthenticationServer;
 import com.ecommerce.service.JwtService;
 import com.ecommerce.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,27 +12,19 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.skyscreamer.jsonassert.JSONCompare;
-import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -62,7 +53,7 @@ class ProductControllerTest {
     @Order(1)
     @WithMockUser
     void getAllProductsReturnEmptyListWhenNoProductsAvailable() throws Exception {
-        when(productService.getAllProducts(anyInt(), anyInt())).thenReturn(ProductListResponse.empty());
+        when(productService.getAllProducts(anyInt(), anyInt())).thenReturn(new CustomPageDTO<>());
 
         mockMvc.perform(get("/products"))
                 .andExpect(status().is(200))
@@ -79,7 +70,9 @@ class ProductControllerTest {
 
         ProductResponse product1 = new ProductResponse(UUID.fromString("feecadf2-e74c-4a06-9e32-2e6d757158b2"), "Laptop", 1000.0, "Electronics", "Best Laptop", "url.com");
         List<ProductResponse> productListResponseDTO = List.of(product1);
-        when(productService.getAllProducts(anyInt(), anyInt())).thenReturn(new ProductListResponse(productListResponseDTO, 0, 10L));
+        Page page = new PageImpl(productListResponseDTO, Pageable.ofSize(10), 1);
+        var res = new CustomPageDTO<>(productListResponseDTO, page);
+        when(productService.getAllProducts(anyInt(), anyInt())).thenReturn(res);
 
         mockMvc.perform(get("/products"))
                 .andExpect(status().is(200))
@@ -115,10 +108,11 @@ class ProductControllerTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void addNewProduct() throws Exception {
         var id = UUID.fromString("abcdadf2-e74c-4a06-1111-2e6d757158b2");
+        var categoryId = UUID.randomUUID();
         var productName = "Laptop";
         var productResponse = new ProductResponse(id, productName, 1001.0, "Electronics", "Best Laptop", "url.com");
         var respString = convertToJson(productResponse);
-        ProductRequest productRequest = new ProductRequest(productName, 1001.0, "Electronics", "Best Laptop", "url.com");
+        ProductRequest productRequest = new ProductRequest(productName, 1001.0, categoryId, "Best Laptop", "url.com");
         var requestJson = convertToJson(productResponse);
         when(productService.createNewProduct(productRequest)).thenReturn(productResponse);
         mockMvc.perform(post("/products").with(csrf()).content(requestJson).contentType(APPLICATION_JSON))
@@ -130,10 +124,11 @@ class ProductControllerTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void updateProductDetail() throws Exception {
         var id = UUID.fromString("abcdadf2-e74c-4a06-2222-2e6d757158b2");
+        var categoryId = UUID.randomUUID();
         var productName = "Laptop";
         var productResponse = new ProductResponse(id, productName, 1002.0, "Electronics", "Best Laptop", "url.com");
         var respString = convertToJson(productResponse);
-        ProductRequest productRequest = new ProductRequest(productName, 1002.0, "Electronics", "Best Laptop", "url.com");
+        ProductRequest productRequest = new ProductRequest(productName, 1002.0, categoryId, "Best Laptop", "url.com");
         var requestJson = convertToJson(productResponse);
         when(productService.updateProductById(id, productRequest)).thenReturn(productResponse);
         mockMvc.perform(put("/products/" + id).with(csrf()).content(requestJson).contentType(APPLICATION_JSON))

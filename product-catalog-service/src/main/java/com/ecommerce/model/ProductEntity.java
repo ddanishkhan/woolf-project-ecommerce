@@ -23,7 +23,7 @@ public class ProductEntity extends BaseUUIDEntity {
 
     private String coverImageURL;
 
-    @ManyToOne(cascade = CascadeType.ALL) // Required for saving category if it does not exist.
+    @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private CategoryEntity category;
 
