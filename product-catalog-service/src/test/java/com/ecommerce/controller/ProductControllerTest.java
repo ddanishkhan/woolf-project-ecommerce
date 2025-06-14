@@ -68,7 +68,8 @@ class ProductControllerTest {
     @WithMockUser
     void getAllProductsReturnProducts() throws Exception {
 
-        ProductResponse product1 = new ProductResponse(UUID.fromString("feecadf2-e74c-4a06-9e32-2e6d757158b2"), "Laptop", 1000.0, "Electronics", "Best Laptop", "url.com");
+        ProductResponse product1 = new ProductResponse(
+                UUID.fromString("feecadf2-e74c-4a06-9e32-2e6d757158b2"), "Laptop", 1000.0, "Electronics", "Best Laptop", 1, "url.com");
         List<ProductResponse> productListResponseDTO = List.of(product1);
         Page page = new PageImpl(productListResponseDTO, Pageable.ofSize(10), 1);
         var res = new CustomPageDTO<>(productListResponseDTO, page);
@@ -95,7 +96,7 @@ class ProductControllerTest {
     @WithMockUser
     void findProductByIdSuccess() throws Exception {
         var id = UUID.fromString("feecadf2-e74c-4a06-9e32-2e6d757158b2");
-        var productResponse = new ProductResponse(id, "Laptop", 1000.0, "Electronics", "Best Laptop", "url.com");
+        var productResponse = new ProductResponse(id, "Laptop", 1000.0, "Electronics", "Best Laptop", 1,"url.com");
         var respString = convertToJson(productResponse);
 
         when(productService.getProductById(id)).thenReturn(productResponse);
@@ -110,7 +111,7 @@ class ProductControllerTest {
         var id = UUID.fromString("abcdadf2-e74c-4a06-1111-2e6d757158b2");
         var categoryId = UUID.randomUUID();
         var productName = "Laptop";
-        var productResponse = new ProductResponse(id, productName, 1001.0, "Electronics", "Best Laptop", "url.com");
+        var productResponse = new ProductResponse(id, productName, 1001.0, "Electronics", "Best Laptop", 1, "url.com");
         var respString = convertToJson(productResponse);
         ProductRequest productRequest = new ProductRequest(productName, 1001.0, categoryId, "Best Laptop", "url.com");
         var requestJson = convertToJson(productResponse);
@@ -126,7 +127,7 @@ class ProductControllerTest {
         var id = UUID.fromString("abcdadf2-e74c-4a06-2222-2e6d757158b2");
         var categoryId = UUID.randomUUID();
         var productName = "Laptop";
-        var productResponse = new ProductResponse(id, productName, 1002.0, "Electronics", "Best Laptop", "url.com");
+        var productResponse = new ProductResponse(id, productName, 1002.0, "Electronics", "Best Laptop", 1, "url.com");
         var respString = convertToJson(productResponse);
         ProductRequest productRequest = new ProductRequest(productName, 1002.0, categoryId, "Best Laptop", "url.com");
         var requestJson = convertToJson(productResponse);

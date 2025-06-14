@@ -61,11 +61,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             final String jwt = authHeader.substring(7); //Token present after bearer
-            final String userEmail = jwtService.extractUsername(jwt);
+            final String username = jwtService.extractUsername(jwt);
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-            if (userEmail != null && authentication == null) {
+            if (username != null && authentication == null) {
 
                 if (jwtService.isTokenSessionValid(jwt)) {
                     CustomJWTAuthentication authToken = jwtService.getAuthenticationToken(jwt);

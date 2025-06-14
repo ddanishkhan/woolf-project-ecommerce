@@ -31,6 +31,9 @@ public class ProductDocument {
     @Field(type = FieldType.Keyword, name = "category") // Keyword for exact matches, Text for full-text search
     private String category;
 
+    @Field(type = FieldType.Integer, name = "stockQuantity") // Keyword for exact matches, Text for full-text search
+    private Integer stockQuantity;
+
     @Field(type = FieldType.Text, name = "imageURL")
     private String imageURL;
 

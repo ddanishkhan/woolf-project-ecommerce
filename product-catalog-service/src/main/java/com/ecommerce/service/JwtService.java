@@ -53,7 +53,7 @@ public class JwtService {
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token, claims -> claims.get("username", String.class));
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -104,7 +104,8 @@ public class JwtService {
 
         final Claims claims = claimsJws.getPayload();
 
-        String email = claims.getSubject();
+        String subject = claims.getSubject();
+        String username = claims.get("username", String.class);
 
         List<String> roles = claims.get(authoritiesKey, List.class);
         final Collection<? extends GrantedAuthority> authorities =
@@ -112,10 +113,6 @@ public class JwtService {
                         .map(SimpleGrantedAuthority::new)
                         .toList();
 
-        return new CustomJWTAuthentication(
-                token,
-                email,
-                authorities
-        );
+        return new CustomJWTAuthentication(token, subject, username, authorities);
     }
 }

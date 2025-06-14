@@ -22,6 +22,7 @@ public class EntityToResponseMapper {
                 .category(product.getCategory() != null ? product.getCategory().getName() : "N/A")
                 .description(product.getDescription())
                 .price(product.getPrice())
+                .stockQuantity(product.getStockQuantity())
                 .imageURL(product.getCoverImageURL())
                 .build();
     }
@@ -43,6 +44,7 @@ public class EntityToResponseMapper {
                 .category(productDocument.getCategory() != null ? productDocument.getCategory() : "N/A")
                 .description(productDocument.getDescription())
                 .price(productDocument.getPrice())
+                .stockQuantity(productDocument.getStockQuantity())
                 .imageURL(productDocument.getImageURL())
                 .build();
     }

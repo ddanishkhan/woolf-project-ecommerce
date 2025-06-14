@@ -28,7 +28,7 @@ public class SearchServiceImpl implements SearchService{
         log.debug("Searching products by name in Elasticsearch: {}", name);
         List<ProductDocument> documents = productSearchRepository.findByNameContainingIgnoreCase(name);
         return documents.stream()
-                .map(EntityToResponseMapper::toProductResponse) // Reusing existing mapper
+                .map(EntityToResponseMapper::toProductResponse)
                 .toList();
     }
 

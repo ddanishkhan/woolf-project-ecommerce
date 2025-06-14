@@ -21,6 +21,11 @@ public class ProductEntity extends BaseUUIDEntity {
 
     private Double price;
 
+    private Integer stockQuantity;
+
+    @Version
+    private Long version; // for optimistic locking
+
     private String coverImageURL;
 
     @ManyToOne

@@ -8,13 +8,15 @@ import java.util.Collection;
 public class CustomJWTAuthentication implements Authentication {
 
     private final String token;
-    private final String email;
+    private final String subject;
+    private final String username;
     private final Collection<? extends GrantedAuthority> authorities;
     private boolean authenticated = true;
 
-    public CustomJWTAuthentication(String token, String email, Collection<? extends GrantedAuthority> authorities) {
+    public CustomJWTAuthentication(String token, String subject, String username, Collection<? extends GrantedAuthority> authorities) {
         this.token = token;
-        this.email = email;
+        this.subject = subject;
+        this.username = username;
         this.authorities = authorities;
     }
 
@@ -35,7 +37,7 @@ public class CustomJWTAuthentication implements Authentication {
 
     @Override
     public Object getPrincipal() {
-        return getName();
+        return this.subject;
     }
 
     @Override
@@ -50,6 +52,6 @@ public class CustomJWTAuthentication implements Authentication {
 
     @Override
     public String getName() {
-        return email;
+        return username;
     }
 }

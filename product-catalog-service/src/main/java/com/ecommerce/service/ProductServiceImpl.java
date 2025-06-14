@@ -1,9 +1,12 @@
 package com.ecommerce.service;
 
 import com.ecommerce.dto.CustomPageDTO;
+import com.ecommerce.dto.StockUpdateRequest;
 import com.ecommerce.dto.mapper.EntityToResponseMapper;
 import com.ecommerce.dto.mapper.RequestToEntityMapper;
+import com.ecommerce.dto.request.BatchStockUpdateRequest;
 import com.ecommerce.dto.request.ProductRequest;
+import com.ecommerce.dto.request.StockUpdateItem;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.elasticsearch.model.ProductDocument;
 import com.ecommerce.elasticsearch.repository.ProductSearchRepository;
@@ -11,6 +14,7 @@ import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.model.ProductEntity;
 import com.ecommerce.repository.CategoryRepository;
 import com.ecommerce.repository.ProductRepository;
+import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,7 +24,10 @@ import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service("productService")
 @Slf4j
@@ -133,5 +140,70 @@ public class ProductServiceImpl implements ProductService {
         return EntityToResponseMapper.toProductResponse(savedEntity);
     }
 
+    @Override
+    @Transactional
+    public void decrementStock(UUID productId, StockUpdateRequest request) {
+        try {
+            // 1. Find the product by its ID
+            ProductEntity product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
+
+            // 2. Check for sufficient stock
+            if (product.getStockQuantity() < request.getQuantity()) {
+                throw new IllegalStateException("Insufficient stock for product: " + product.getName());
+            }
+
+            // 3. Decrement the quantity
+            product.setStockQuantity(product.getStockQuantity() - request.getQuantity());
+
+            // 4. Save the product. JPA will use the @Version field automatically.
+            // If another transaction has updated this product since we read it,
+            // the version numbers won't match, and this will throw an OptimisticLockException.
+            productRepository.save(product);
+
+        } catch (OptimisticLockException ex) {
+            // handles the overbooking race condition.
+            throw new IllegalStateException("Could not update stock due to a concurrent modification. Please try again.");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void decrementStockBatch(BatchStockUpdateRequest request) {
+        try {
+            List<UUID> productIds = request.getItems().stream()
+                    .map(StockUpdateItem::getProductId)
+                    .collect(Collectors.toList());
+
+            // 1. Fetch all requested products
+            Map<UUID, ProductEntity> productsById = productRepository.findAllById(productIds).stream()
+                    .collect(Collectors.toMap(ProductEntity::getId, product -> product));
+
+            // 2. Validate all items before making any changes.
+            for (StockUpdateItem item : request.getItems()) {
+                ProductEntity product = productsById.get(item.getProductId());
+                if (product == null) {
+                    throw new ProductNotFoundException("Product not found with ID: " + item.getProductId());
+                }
+                if (product.getStockQuantity() < item.getQuantity()) {
+                    throw new IllegalStateException("Insufficient stock for product: " + product.getName());
+                }
+            }
+
+            // 3. If all validations pass, perform the updates.
+            for (StockUpdateItem item : request.getItems()) {
+                ProductEntity product = productsById.get(item.getProductId());
+                product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
+            }
+
+            // 4. Save all modified products.
+            // Atomic operation, If any save fails (e.g., OptimisticLockException),
+            // all changes will be rolled back.
+            productRepository.saveAll(productsById.values());
+
+        } catch (OptimisticLockException ex) {
+            throw new IllegalStateException("Could not update stock due to a concurrent modification. Please try again.");
+        }
+    }
 
 }

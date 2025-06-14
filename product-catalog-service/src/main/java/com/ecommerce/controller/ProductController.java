@@ -1,6 +1,8 @@
 package com.ecommerce.controller;
 
 import com.ecommerce.dto.CustomPageDTO;
+import com.ecommerce.dto.StockUpdateRequest;
+import com.ecommerce.dto.request.BatchStockUpdateRequest;
 import com.ecommerce.dto.request.CreateCategoryRequest;
 import com.ecommerce.dto.request.ProductRequest;
 import com.ecommerce.dto.response.CategoryResponse;
@@ -134,4 +136,17 @@ public class ProductController {
         productService.deleteProductById(id);
         return ResponseEntity.noContent().build(); // Return 204 No Content
     }
+
+    @PostMapping("/products/{id}/stock/decrement")
+    public ResponseEntity<Void> decrementStock(@PathVariable("id") UUID id, @RequestBody StockUpdateRequest request) {
+        productService.decrementStock(id, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/stock/decrement-batch")
+    public ResponseEntity<Void> decrementStockBatch(@Valid @RequestBody BatchStockUpdateRequest request) {
+        productService.decrementStockBatch(request);
+        return ResponseEntity.ok().build();
+    }
+
 }

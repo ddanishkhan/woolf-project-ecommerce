@@ -14,5 +14,6 @@ public record ProductResponse(
         Double price,
         String category,
         String description,
+        Integer stockQuantity,
         @JsonProperty("image") String imageURL) {
 }
