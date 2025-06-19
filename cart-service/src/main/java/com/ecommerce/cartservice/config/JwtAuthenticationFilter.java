@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,24 +38,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
-        final String userEmail = jwtService.extractUsername(jwt);
+        final String username = jwtService.extractUsername(jwt);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // If the token is valid and the user is not already authenticated
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null && !jwtService.isTokenExpired(jwt)) {
-                // Create a UserDetails object. For this service, we only need the username (email).
-                UserDetails userDetails = new User(userEmail, "", Collections.emptyList());
+        if (username != null && authentication == null && jwtService.isTokenSessionValid(jwt)) {
+            // Create a UserDetails object. For this service, we only need the username.
+            UserDetails userDetails = new User(username, "", Collections.emptyList());
 
-                // Create the authentication token
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            // Create the authentication token
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+            );
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Set the authentication in the security context
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+            // Set the authentication in the security context
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
 
         filterChain.doFilter(request, response);
     }
