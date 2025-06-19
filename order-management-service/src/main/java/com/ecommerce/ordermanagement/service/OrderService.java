@@ -7,6 +7,8 @@ import com.ecommerce.ordermanagement.dto.OrderResponse;
 import com.ecommerce.ordermanagement.dto.ProductDto;
 import com.ecommerce.ordermanagement.dto.UpdateOrderStatusRequest;
 import com.ecommerce.ordermanagement.dto.UserDto;
+import com.ecommerce.ordermanagement.events.dto.OrderEvent;
+import com.ecommerce.ordermanagement.events.publisher.OrderEventPublisher;
 import com.ecommerce.ordermanagement.exception.OrderProcessingException;
 import com.ecommerce.ordermanagement.exception.ResourceNotFoundException;
 import com.ecommerce.ordermanagement.exception.ServiceCommunicationException;
@@ -16,7 +18,9 @@ import com.ecommerce.ordermanagement.model.OrderItem;
 import com.ecommerce.ordermanagement.model.OrderStatus;
 import com.ecommerce.ordermanagement.repository.CustomerRepository;
 import com.ecommerce.ordermanagement.repository.OrderRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,15 +40,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
+    private final OrderEventPublisher orderEventPublisher;
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${product.service.url}")
     private String productServiceUrl;
@@ -52,6 +59,7 @@ public class OrderService {
     @Value("${user.service.url}")
     private String userServiceUrl;
 
+    @SneakyThrows
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest request, String authHeader) {
         // Find the customer locally or fetch and replicate them.
@@ -84,18 +92,20 @@ public class OrderService {
 
             totalAmount = totalAmount.add(product.price().multiply(BigDecimal.valueOf(itemRequest.quantity())));
         }
-
-        // TODO - Replace with message broker event instead of synchronous call
-        List<OrderItemRequest> stockDecrementRequest = new ArrayList<>(request.items());
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", authHeader);
-        HttpEntity<List<OrderItemRequest>> entity = new HttpEntity<>(stockDecrementRequest, headers);
-        String url = productServiceUrl + "/stock/decrement-batch";
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-        log.info("Decremented product {}", response.getBody());
         newOrder.setTotalAmount(totalAmount);
 
+        // Save the order in its PENDING state. This gives us an orderId.
         Order savedOrder = orderRepository.save(newOrder);
+
+        // Now, create and publish the OrderCreatedEvent for the Saga
+        OrderEvent orderEvent = new OrderEvent(
+                savedOrder.getId(),
+                savedOrder.getOrderItems().stream()
+                        .map(item -> new com.ecommerce.ordermanagement.events.dto.OrderItem(item.getProductId(), item.getQuantity()))
+                        .collect(Collectors.toList())
+        );
+        log.info("Publish event {}", objectMapper.writeValueAsString(orderEvent));
+        orderEventPublisher.publishOrderCreatedEvent(orderEvent);
 
         return convertToOrderResponse(savedOrder);
     }

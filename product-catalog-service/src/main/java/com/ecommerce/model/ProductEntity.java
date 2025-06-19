@@ -19,8 +19,10 @@ public class ProductEntity extends BaseUUIDEntity {
 
     private String description;
 
+    @Column(nullable = false)
     private Double price;
 
+    @Column(nullable = false)
     private Integer stockQuantity;
 
     @Version

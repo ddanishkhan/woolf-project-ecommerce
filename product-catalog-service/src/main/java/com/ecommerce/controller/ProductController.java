@@ -118,7 +118,7 @@ public class ProductController {
 
     @PostMapping("/products")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<ProductResponse> addNewProduct(@RequestBody ProductRequest productRequestBody) {
+    public ResponseEntity<ProductResponse> addNewProduct(@Valid @RequestBody ProductRequest productRequestBody) {
         var product = productService.createNewProduct(productRequestBody);
         return ResponseEntity.status(HttpStatus.CREATED).body(product); // Return 201 Created
     }

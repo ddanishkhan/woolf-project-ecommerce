@@ -5,6 +5,7 @@ package com.ecommerce.ordermanagement.model;
  */
 public enum OrderStatus {
     PENDING,
+    CONFIRMED,
     PROCESSING,
     SHIPPED,
     DELIVERED,

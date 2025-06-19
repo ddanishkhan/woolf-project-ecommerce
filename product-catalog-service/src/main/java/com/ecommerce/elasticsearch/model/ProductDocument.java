@@ -48,6 +48,7 @@ public class ProductDocument {
                 .description(entity.getDescription())
                 .price(entity.getPrice())
                 .category(entity.getCategory() != null ? entity.getCategory().getName() : null)
+                .stockQuantity(entity.getStockQuantity())
                 .imageURL(entity.getCoverImageURL())
                 .build();
     }

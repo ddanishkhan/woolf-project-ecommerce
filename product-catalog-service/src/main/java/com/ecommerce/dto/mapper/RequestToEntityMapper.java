@@ -16,6 +16,7 @@ public class RequestToEntityMapper {
         productEntity.setPrice(product.price());
         productEntity.setCategory(categoryEntity);
         productEntity.setDescription(product.description());
+        productEntity.setStockQuantity(product.quantity());
         productEntity.setCoverImageURL(product.imageURL());
         return productEntity;
     }

@@ -69,7 +69,7 @@ class ProductServiceImplTest {
         product.setName("Mobile");
         product.setCategory(category);
 
-        var productRequest = new ProductRequest("Mobile", 1.0, UUID.randomUUID(), "", "");
+        var productRequest = new ProductRequest("Mobile", 1.0, UUID.randomUUID(), "", 1, "");
 
         when(productRepository.save(any(ProductEntity.class))).thenReturn(product);
 
@@ -113,7 +113,7 @@ class ProductServiceImplTest {
         product.setCategory(category);
         when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
         when(productRepository.save(any(ProductEntity.class))).thenReturn(product);
-        var productRequest = new ProductRequest("Mobile - updated", 2.0, UUID.randomUUID(), "", "");
+        var productRequest = new ProductRequest("Mobile - updated", 2.0, UUID.randomUUID(), "", 1, "");
 
         //service call
         ProductResponse response = productService.updateProductById(productId, productRequest);

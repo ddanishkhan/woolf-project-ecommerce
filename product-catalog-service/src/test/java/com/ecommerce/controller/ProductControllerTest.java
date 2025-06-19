@@ -113,7 +113,7 @@ class ProductControllerTest {
         var productName = "Laptop";
         var productResponse = new ProductResponse(id, productName, 1001.0, "Electronics", "Best Laptop", 1, "url.com");
         var respString = convertToJson(productResponse);
-        ProductRequest productRequest = new ProductRequest(productName, 1001.0, categoryId, "Best Laptop", "url.com");
+        ProductRequest productRequest = new ProductRequest(productName, 1001.0, categoryId, "Best Laptop",1, "url.com");
         var requestJson = convertToJson(productResponse);
         when(productService.createNewProduct(productRequest)).thenReturn(productResponse);
         mockMvc.perform(post("/products").with(csrf()).content(requestJson).contentType(APPLICATION_JSON))
@@ -129,7 +129,7 @@ class ProductControllerTest {
         var productName = "Laptop";
         var productResponse = new ProductResponse(id, productName, 1002.0, "Electronics", "Best Laptop", 1, "url.com");
         var respString = convertToJson(productResponse);
-        ProductRequest productRequest = new ProductRequest(productName, 1002.0, categoryId, "Best Laptop", "url.com");
+        ProductRequest productRequest = new ProductRequest(productName, 1002.0, categoryId, "Best Laptop", 1, "url.com");
         var requestJson = convertToJson(productResponse);
         when(productService.updateProductById(id, productRequest)).thenReturn(productResponse);
         mockMvc.perform(put("/products/" + id).with(csrf()).content(requestJson).contentType(APPLICATION_JSON))
