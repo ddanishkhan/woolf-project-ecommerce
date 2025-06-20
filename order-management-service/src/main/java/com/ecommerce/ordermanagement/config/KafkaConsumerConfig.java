@@ -1,5 +1,6 @@
 package com.ecommerce.ordermanagement.config;
 
+import com.ecommerce.ordermanagement.events.dto.PaymentProcessedEvent;
 import com.ecommerce.ordermanagement.events.dto.StockReservationEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -38,4 +39,22 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(stockReservationConsumerFactory());
         return factory;
     }
+
+    // --- Consumer Factory for Payment Results ---
+    @Bean
+    public ConsumerFactory<String, PaymentProcessedEvent> paymentResultConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        JsonDeserializer<PaymentProcessedEvent> deserializer = new JsonDeserializer<>(PaymentProcessedEvent.class, false);
+        deserializer.addTrustedPackages("*");
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PaymentProcessedEvent> paymentResultListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, PaymentProcessedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(paymentResultConsumerFactory());
+        return factory;
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.ecommerce.ordermanagement.config;
 
+import com.ecommerce.ordermanagement.events.dto.OrderConfirmedEvent;
 import com.ecommerce.ordermanagement.events.dto.OrderEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -22,6 +23,25 @@ public class KafkaProducerConfig {
 
     @Bean
     public ProducerFactory<String, OrderEvent> orderEventProducerFactory() {
+        return getKafkaProducerFactory();
+    }
+
+    @Bean
+    public KafkaTemplate<String, OrderEvent> orderEventKafkaTemplate() {
+        return new KafkaTemplate<>(orderEventProducerFactory());
+    }
+
+    @Bean
+    public ProducerFactory<String, OrderConfirmedEvent> orderConfirmedEventProducerFactory() {
+        return getKafkaProducerFactory();
+    }
+
+    @Bean
+    public KafkaTemplate<String, OrderConfirmedEvent> orderConfirmedEventKafkaTemplate() {
+        return new KafkaTemplate<>(orderConfirmedEventProducerFactory());
+    }
+
+    private <T> DefaultKafkaProducerFactory<String, T> getKafkaProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -29,8 +49,4 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    @Bean
-    public KafkaTemplate<String, OrderEvent> orderEventKafkaTemplate() {
-        return new KafkaTemplate<>(orderEventProducerFactory());
-    }
 }

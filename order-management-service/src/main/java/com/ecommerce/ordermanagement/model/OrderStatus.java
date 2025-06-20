@@ -6,8 +6,11 @@ package com.ecommerce.ordermanagement.model;
 public enum OrderStatus {
     PENDING,
     CONFIRMED,
+    AWAITING_PAYMENT,
     PROCESSING,
     SHIPPED,
     DELIVERED,
+    PAID,
+    PAYMENT_FAILED,
     CANCELLED
 }
