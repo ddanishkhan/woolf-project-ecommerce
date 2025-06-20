@@ -26,17 +26,17 @@ public class TokenBlacklistService {
      * Adds a specific token's JTI to the blacklist (database).
      * This might be used for admin-initiated single token revocation.
      *
-     * @param jti The JWT ID (JTI claim) of the token to blacklist.
+     * @param jti        The JWT ID (JTI claim) of the token to blacklist.
      * @param expiryTime The original expiry time of the token.
      */
     @Transactional
     public void addToBlacklist(String jti, Date expiryTime) {
         if (jti != null && expiryTime != null && revokedTokenRepository.findByJti(jti).isEmpty()) {
-                RevokedToken revokedToken = new RevokedToken(jti, expiryTime);
-                revokedTokenRepository.save(revokedToken);
-                // Also remove from active tokens if it was there
-                userActiveTokenRepository.deleteById(jti);
-            }
+            RevokedToken revokedToken = new RevokedToken(jti, expiryTime);
+            revokedTokenRepository.save(revokedToken);
+            // Also remove from active tokens if it was there
+            userActiveTokenRepository.deleteById(jti);
+        }
     }
 
     /**
