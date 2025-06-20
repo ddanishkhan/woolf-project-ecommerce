@@ -10,6 +10,7 @@ import java.util.Set;
 public class ProfileResponse {
     private String id;
     private String name;
+    private String username;
     private String email;
     private String provider;
     private Set<String> roles;

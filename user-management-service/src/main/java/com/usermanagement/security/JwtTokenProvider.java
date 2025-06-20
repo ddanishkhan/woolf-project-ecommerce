@@ -6,6 +6,7 @@ import com.usermanagement.repository.UserActiveTokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SecureDigestAlgorithm;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -28,12 +30,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
+    private static final String ROLES = "roles";
+    private static final SecureDigestAlgorithm<SecretKey, ?> HS_512 = Jwts.SIG.HS512;
+
     private final UserActiveTokenRepository userActiveTokenRepository;
+
     @Value("${app.jwt.secret}")
     private String jwtSecretString;
+
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationInMs;
-    @Getter
+
     private SecretKey jwtSecretKey;
 
     @PostConstruct
@@ -57,12 +64,13 @@ public class JwtTokenProvider {
                 .builder()
                 .id(jti)
                 .claim("name", name)
-                .claim("roles", roles)
+                .claim("username", user.getUsername())
+                .claim(ROLES, roles)
                 .claim("email", user.getEmail())
-                .subject(user.getUsername())
+                .subject(user.getId().toString())
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(getJwtSecretKey(), Jwts.SIG.HS512)
+                .signWith(jwtSecretKey, HS_512)
                 .compact();
 
         // Save the active token
@@ -89,17 +97,16 @@ public class JwtTokenProvider {
                 .builder()
                 .id(jti)
                 .claim("name", name)
-                .claim("roles", roles)
+                .claim(ROLES, roles)
                 .subject(subjectUsername)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(getJwtSecretKey(), Jwts.SIG.HS512)
+                .signWith(jwtSecretKey, HS_512)
                 .compact();
     }
 
-
     public String getUsernameFromJWT(String token) {
-        return getAllClaimsFromToken(token).getSubject();
+        return extractClaim(token, claims -> claims.get("username", String.class));
     }
 
     public String getJtiFromJWT(String token) {
@@ -119,7 +126,7 @@ public class JwtTokenProvider {
     public List<GrantedAuthority> getAuthoritiesFromJWT(String token) {
         Claims claims = getAllClaimsFromToken(token);
         @SuppressWarnings("unchecked")
-        List<String> roles = claims.get("roles", List.class);
+        List<String> roles = claims.get(ROLES, List.class);
         if (roles == null) {
             return List.of();
         }
@@ -140,6 +147,12 @@ public class JwtTokenProvider {
                 .getPayload();
 
         return (String) claims.get("email");
+    }
+
+    // Generic method to extract any claim from the token
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = getAllClaimsFromToken(token);
+        return claimsResolver.apply(claims);
     }
 
 }

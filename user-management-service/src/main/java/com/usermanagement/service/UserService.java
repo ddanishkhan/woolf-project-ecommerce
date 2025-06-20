@@ -45,7 +45,8 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Lazy private PasswordEncoder passwordEncoder;
+    @Lazy
+    private PasswordEncoder passwordEncoder;
 
     @Transactional
     public User processOAuth2User(String providerId, String email, String name, String oauthProviderName) {
@@ -67,7 +68,7 @@ public class UserService {
             user.setDisplayName(name);
             user.setProvider(AuthProvider.valueOf(oauthProviderName.toUpperCase()));
             user.setProviderId(providerId);
-            String username = email.split("@")[0] + "_" + oauthProviderName.toLowerCase().replaceAll("[^a-zA-Z0-9_]", "");
+            String username = email.split("@")[0] + "_" + oauthProviderName.toLowerCase().replaceAll("\\W", "");
             if (Boolean.TRUE.equals(userRepository.existsByUsername(username))) {
                 username = username + "_" + UUID.randomUUID().toString().substring(0, 4);
             }
@@ -129,6 +130,7 @@ public class UserService {
 
     /**
      * Helper method to map a User entity to a ProfileResponse DTO.
+     *
      * @param user The User entity to map.
      * @return The corresponding ProfileResponse DTO.
      */
@@ -136,6 +138,7 @@ public class UserService {
         ProfileResponse response = new ProfileResponse();
         response.setId(user.getId().toString());
         response.setName(user.getDisplayName());
+        response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setProvider(user.getProvider().toString());
         response.setRoles(user.getRoles().stream()
