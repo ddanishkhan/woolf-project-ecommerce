@@ -14,6 +14,7 @@ public record OrderResponse(
         Long customerId,
         String customerName,
         LocalDateTime orderDate,
+        String currency,
         OrderStatus status,
         BigDecimal totalAmount,
         List<OrderItemResponse> items

@@ -34,10 +34,15 @@ public class PaymentResultListener {
             order.setStatus(OrderStatus.PAID);
             log.info("Order {} status updated to PAID.", order.getId());
             // TODO trigger shipping, send a receipt email, etc.
+        } else if (!event.isSuccess() && event.isCancelOrder()) {
+            order.setStatus(OrderStatus.CANCELLED);
+            // TODO : reconciliation process to refill the ordered items back
         } else {
+            // If payment fails, we set the status but do NOT cancel yet.
+            // The order remains in this state, allowing the user to retry.
+            // TODO Add a scheduled cancellation job will eventually clean the failed orders.
             order.setStatus(OrderStatus.PAYMENT_FAILED);
             log.error("Order {} status updated to PAYMENT_FAILED. Reason: {}", order.getId(), event.getFailureReason());
-            // TODO trigger a compensating transaction to release the reserved stock
         }
 
         orderRepository.save(order);

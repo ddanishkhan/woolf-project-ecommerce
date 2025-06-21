@@ -10,8 +10,9 @@ public class KafkaTopicConfig {
 
     public static final String ORDERS_TOPIC = "orders.created";
     public static final String STOCK_RESULTS_TOPIC = "stock.reservation.results";
-    public static final String ORDER_CONFIRMED_TOPIC = "orders.confirmed"; // Topic to publish to for payment
     public static final String PAYMENT_RESULTS_TOPIC = "payments.processed"; // Topic to listen on for payment results
+    public static final String RELEASE_STOCK_TOPIC = "stock.release";
+    public static final String ORDER_CANCELLATION_TOPIC = "orders.cancellation.check";
 
     @Bean
     public NewTopic ordersTopic() {
@@ -19,11 +20,6 @@ public class KafkaTopicConfig {
                 .partitions(1)
                 .replicas(1)
                 .build();
-    }
-
-    @Bean
-    public NewTopic orderConfirmedTopic() {
-        return TopicBuilder.name(ORDER_CONFIRMED_TOPIC).build();
     }
 
 }

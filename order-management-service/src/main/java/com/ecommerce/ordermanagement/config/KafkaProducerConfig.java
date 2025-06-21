@@ -1,7 +1,7 @@
 package com.ecommerce.ordermanagement.config;
 
-import com.ecommerce.ordermanagement.events.dto.OrderConfirmedEvent;
 import com.ecommerce.ordermanagement.events.dto.OrderEvent;
+import com.ecommerce.ordermanagement.events.dto.ReleaseStockEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,14 +31,15 @@ public class KafkaProducerConfig {
         return new KafkaTemplate<>(orderEventProducerFactory());
     }
 
+
     @Bean
-    public ProducerFactory<String, OrderConfirmedEvent> orderConfirmedEventProducerFactory() {
+    public ProducerFactory<String, ReleaseStockEvent> releaseStockEventProducerFactory() {
         return getKafkaProducerFactory();
     }
 
     @Bean
-    public KafkaTemplate<String, OrderConfirmedEvent> orderConfirmedEventKafkaTemplate() {
-        return new KafkaTemplate<>(orderConfirmedEventProducerFactory());
+    public KafkaTemplate<String, ReleaseStockEvent> releaseStockEventKafkaTemplate() {
+        return new KafkaTemplate<>(releaseStockEventProducerFactory());
     }
 
     private <T> DefaultKafkaProducerFactory<String, T> getKafkaProducerFactory() {

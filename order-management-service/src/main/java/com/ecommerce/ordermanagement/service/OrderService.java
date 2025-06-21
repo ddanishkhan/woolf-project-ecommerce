@@ -70,8 +70,6 @@ public class OrderService {
         newOrder.setCustomer(customer);
         newOrder.setOrderDate(LocalDateTime.now());
         newOrder.setStatus(OrderStatus.PENDING);
-        // Save the payment token with the order so it can be used later in the saga
-        newOrder.setPaymentMethodToken(request.paymentMethodToken());
         BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (OrderItemRequest itemRequest : request.items()) {
@@ -227,6 +225,7 @@ public class OrderService {
                 order.getCustomer().getId(),
                 order.getCustomer().getUsername(),
                 order.getOrderDate(),
+                order.getCurrency(),
                 order.getStatus(),
                 order.getTotalAmount(),
                 itemResponses);
