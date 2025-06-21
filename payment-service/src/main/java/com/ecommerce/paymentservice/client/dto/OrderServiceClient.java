@@ -54,7 +54,7 @@ public class OrderServiceClient {
                 throw new ResourceNotFound("Order not found: " + orderId, e);
             } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStatusCode() == HttpStatus.FORBIDDEN) {
                 log.error("Unauthorized access to order {}: {}", orderId, e.getMessage());
-                throw new RuntimeException("Unauthorized to access order: " + orderId, e);
+                throw e;
             }
             log.error("Client error fetching order details for orderId {}: {}", orderId, e.getMessage());
             throw new ExternalClientException("Client error fetching order details: " + e.getMessage(), e);

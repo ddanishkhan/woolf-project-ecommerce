@@ -14,5 +14,7 @@ public class PaymentProcessedEvent implements Serializable {
     private Long orderId;
     private UUID paymentId;
     private boolean success;
+    private boolean cancelOrder;
+    private String transactionId;
     private String failureReason;
 }

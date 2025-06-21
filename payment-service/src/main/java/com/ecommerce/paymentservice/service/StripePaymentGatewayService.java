@@ -20,6 +20,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Service("stripePaymentGatewayService")
@@ -52,7 +55,6 @@ public class StripePaymentGatewayService implements PaymentGatewayService {
                 .build()
                 .toUriString();
 
-
         SessionCreateParams.LineItem genericLineItem =
                 SessionCreateParams.LineItem.builder()
                         .setPriceData(
@@ -70,15 +72,26 @@ public class StripePaymentGatewayService implements PaymentGatewayService {
                         ).setQuantity(1L)
                         .build();
 
+        // Prepare metadata for the PaymentIntent that Checkout will create
+        Map<String, String> paymentIntentMetadata = new HashMap<>();
+        paymentIntentMetadata.put(MetadataConstant.PAYMENT_ID, payment.getId().toString()); // Your internal payment ID
+        paymentIntentMetadata.put(MetadataConstant.ORDER_ID, orderDetails.getOrderId().toString());
+        // Build the PaymentIntentData, including your metadata
+        SessionCreateParams.PaymentIntentData paymentIntentData =
+                SessionCreateParams.PaymentIntentData.builder()
+                        .putAllMetadata(paymentIntentMetadata)
+                        .build();
+
+
         SessionCreateParams.Builder sessionBuilder = SessionCreateParams.builder()
                 .setSuccessUrl(successUrl)
                 .setCancelUrl(cancelUrl)
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .addLineItem(genericLineItem);
-
-        sessionBuilder.putMetadata(MetadataConstant.PAYMENT_ID, payment.getId().toString());
-        sessionBuilder.putMetadata(MetadataConstant.ORDER_ID, orderDetails.getOrderId().toString());
+                .addLineItem(genericLineItem)
+                .setPaymentIntentData(paymentIntentData)
+                .putAllMetadata(paymentIntentMetadata)
+                .setExpiresAt(Instant.now().plusSeconds(stripeApiProperties.getDurationInMinutes() * 60).getEpochSecond());
 
         try {
             Session session = Session.create(sessionBuilder.build());
