@@ -2,6 +2,7 @@ package com.ecommerce.ordermanagement.security;
 
 import com.ecommerce.ordermanagement.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +24,12 @@ public class OrderSecurityService {
      * @return true if the user is the owner, false otherwise.
      */
     public boolean isOwner(Authentication authentication, Long orderId) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null || !authentication.isAuthenticated() || !NumberUtils.isCreatable(authentication.getName())) {
             return false;
         }
 
         // The user's ID from the JWT principal
-        final Long userId = Long.parseLong(authentication.getName());
+        final Long userId = Long.valueOf(authentication.getName());
 
         // Check the database to see if the customer ID on the order matches the user's ID
         return orderRepository.findById(orderId)

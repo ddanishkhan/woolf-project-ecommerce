@@ -62,7 +62,7 @@ public class OrderController {
      * @return The order details with HTTP status 200 (OK).
      */
     @GetMapping("/{id}")
-    @PreAuthorize("@orderSecurityService.isOwner(authentication, #id) or hasAuthority('ADMIN')")
+    @PreAuthorize("@orderSecurityService.isOwner(authentication, #id) or hasAuthority('ADMIN') or hasRole('SERVICE')")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
