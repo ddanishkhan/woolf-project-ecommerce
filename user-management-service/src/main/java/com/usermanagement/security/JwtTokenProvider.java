@@ -8,7 +8,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecureDigestAlgorithm;
 import jakarta.annotation.PostConstruct;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,7 +49,7 @@ public class JwtTokenProvider {
     }
 
     @Transactional // Make token generation and saving active token transactional
-    public String generateToken(User user, String name, Collection<? extends GrantedAuthority> authorities) {
+    public String generateInternalToken(User user, String name, Collection<? extends GrantedAuthority> authorities) {
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
@@ -80,25 +79,22 @@ public class JwtTokenProvider {
         return tokenString;
     }
 
-    // if User object might not be immediately available, (OAUTH), we need User to save UserActiveToken which does not occur here.
-    public String generateToken(String subjectUsername, String name, Collection<? extends GrantedAuthority> authorities) {
-        // cannot save to UserActiveToken unless we fetch the User here.
-        // assume the caller will handle User fetching if using this. Or, this method could be deprecated/removed if User object is always available.
-        log.warn("Warning: Generating token without saving to UserActiveToken table. User object needed.");
+    public String generateInternalToken(String username, Collection<? extends GrantedAuthority> authorities) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
-        String jti = UUID.randomUUID().toString();
+        // Service tokens can have a longer validity
+        Date expiryDate = new Date(now.getTime() + (jwtExpirationInMs * 10)); // e.g., 10x user expiration
 
         List<String> roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
+        String jti = "srv_" + UUID.randomUUID().toString();
         return Jwts
                 .builder()
                 .id(jti)
-                .claim("name", name)
+                .claim("username", username)
                 .claim(ROLES, roles)
-                .subject(subjectUsername)
+                .subject(username)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(jwtSecretKey, HS_512)

@@ -69,7 +69,7 @@ public class AuthController {
         String displayName = appUser.getDisplayName() != null ? appUser.getDisplayName() : appUser.getUsername();
 
         // Use the JwtTokenProvider method that takes User object
-        String jwt = jwtTokenProvider.generateToken(
+        String jwt = jwtTokenProvider.generateInternalToken(
                 appUser, // Pass the User object
                 displayName,
                 userDetails.getAuthorities()

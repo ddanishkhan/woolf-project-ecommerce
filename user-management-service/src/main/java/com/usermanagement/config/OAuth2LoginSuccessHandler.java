@@ -48,7 +48,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     .map(role -> new SimpleGrantedAuthority(role.getName().name()))
                     .toList();
 
-            String jwt = jwtTokenProvider.generateToken(localUser, displayName, authorities);
+            String jwt = jwtTokenProvider.generateInternalToken(localUser, displayName, authorities);
 
             String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
                     .queryParam("token", jwt)
