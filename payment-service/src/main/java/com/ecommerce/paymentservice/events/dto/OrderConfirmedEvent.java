@@ -12,5 +12,4 @@ import java.math.BigDecimal;
 public class OrderConfirmedEvent implements Serializable {
     private Long orderId;
     private BigDecimal totalAmount;
-    private String paymentMethodToken; // FIXME e.g., Stripe's "tok_visa"
 }
