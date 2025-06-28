@@ -1,6 +1,7 @@
 package com.ecommerce.notificationservice.config;
 
 import com.ecommerce.notificationservice.dto.OrderPaidEvent;
+import com.ecommerce.notificationservice.dto.PasswordResetTokenEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +37,26 @@ public class KafkaListenerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, OrderPaidEvent> orderPaidEventConcurrentKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, OrderPaidEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(orderDetailsDTOConsumerFactory());
+        return factory;
+    }
+
+
+    @Bean
+    public ConsumerFactory<String, PasswordResetTokenEvent> passwordResetTokenEventConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        JsonDeserializer<PasswordResetTokenEvent> deserializer = new JsonDeserializer<>(PasswordResetTokenEvent.class);
+        deserializer.setRemoveTypeHeaders(false);
+        deserializer.addTrustedPackages("com.ecommerce");
+        deserializer.setUseTypeMapperForKey(true);
+
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PasswordResetTokenEvent> passwordResetTokenListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, PasswordResetTokenEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(passwordResetTokenEventConsumerFactory());
         return factory;
     }
 

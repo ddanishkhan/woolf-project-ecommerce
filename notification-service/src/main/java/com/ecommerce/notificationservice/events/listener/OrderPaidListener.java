@@ -1,5 +1,6 @@
 package com.ecommerce.notificationservice.events.listener;
 
+import com.ecommerce.notificationservice.config.KafkaProperties;
 import com.ecommerce.notificationservice.dto.OrderDetailsDTO;
 import com.ecommerce.notificationservice.dto.OrderPaidEvent;
 import com.ecommerce.notificationservice.service.EmailService;
@@ -15,16 +16,17 @@ import org.springframework.web.client.RestTemplate;
 @Component
 @RequiredArgsConstructor
 public class OrderPaidListener {
+
     private final EmailService emailService;
     private final RestTemplate restTemplate;
-    private static final String ORDERS_PAID_TOPIC = "orders.paid";
+
     @Value("${order-management.service.url}")
     private String orderServiceUrl;
 
     @KafkaListener(
-            containerFactory = "orderPaidEventConcurrentKafkaListenerContainerFactory",
-            topics = ORDERS_PAID_TOPIC,
-            groupId = "notification-service-group")
+            containerFactory = "kafkaListenerContainerFactory",
+            topics = KafkaProperties.ORDERS_PAID_TOPIC,
+            groupId = KafkaProperties.NOTIFICATION_SERVICE_GROUP)
     public void handleOrderPaidEvent(@Payload OrderPaidEvent event) {
         log.info("Received paid order event for order ID: {}", event.getOrderId());
         try {
