@@ -107,16 +107,7 @@ public class PaymentController {
         payment = paymentRepository.save(payment); // Save to get the ID
 
         // 4. Select and call the appropriate payment gateway service
-        PaymentGatewayService service = null;
-        if ("STRIPE".equalsIgnoreCase(paymentGateway)) {
-            service = paymentGatewayServices.get("stripePaymentGatewayService");
-        } else if ("RAZORPAY".equalsIgnoreCase(paymentGateway)) {
-            service = paymentGatewayServices.get("razorpayPaymentGatewayService");
-        }
-
-        if (service == null) {
-            throw new IllegalArgumentException("Unsupported payment gateway: " + paymentGateway);
-        }
+        PaymentGatewayService service = getPaymentGatewayService(paymentGateway);
 
         PaymentResponse response = service.createPayment(orderDetails, orderId, payment);
         return ResponseEntity.ok(response);
@@ -124,6 +115,8 @@ public class PaymentController {
 
     @GetMapping("/callback/success")
     public ResponseEntity<String> paymentSuccessCallback(
+            @RequestParam String paymentGateway,
+            @RequestParam(value = MetadataConstant.PAYMENT_ID) String sessionId,
             @RequestParam(value = MetadataConstant.PAYMENT_ID) String paymentIdStr,
             @RequestParam(value = MetadataConstant.ORDER_ID, required = false) Long orderId) {
         log.info("Payment success callback received for internal paymentId: {}", paymentIdStr);
@@ -146,6 +139,8 @@ public class PaymentController {
 
     @GetMapping("/callback/cancel")
     public ResponseEntity<String> paymentCancelCallback(
+            @RequestParam String paymentGateway,
+            @RequestParam(value = MetadataConstant.SESSION_ID) String sessionId,
             @RequestParam(value = MetadataConstant.PAYMENT_ID) UUID paymentId,
             @RequestParam(value = MetadataConstant.ORDER_ID, required = false) Long orderId) { // orderId now just for logging/convenience
         log.info("Payment cancel callback received for internal paymentId: {}", paymentId);
@@ -164,30 +159,37 @@ public class PaymentController {
             return ResponseEntity.ok("Payment already processed for order " + payment.getOrderId() + ".");
         }
 
+        // 4. Select and call the appropriate payment gateway service
+        PaymentGatewayService service = getPaymentGatewayService(paymentGateway);
+
         try {
-            // TODO: Replace payment cancellation with checkout.session.expired webhook entirely or keep this as well ?
-            payment.setStatus(PaymentStatus.CANCELLED);
-            payment.setFailureReason("User cancelled payment on gateway.");
-            paymentRepository.save(payment);
-            log.info("Payment transaction {} updated to CANCELLED via callback.", paymentId);
-
-            // Publish Kafka event
-            PaymentProcessedEvent event = new PaymentProcessedEvent(
-                    payment.getOrderId(),
-                    paymentId,
-                    false,
-                    payment.getGatewayPaymentId(),
-                    "User cancelled payment."
-            );
-            paymentEventProducer.sendPaymentProcessedEvent(event);
-            log.info("PaymentProcessedEvent (CANCELLED) published for order {}.", payment.getOrderId());
-
-            return ResponseEntity.ok("Payment cancelled for order " + payment.getOrderId() + ".");
+            boolean isCancelled = service.cancelPayment(sessionId); // cancel the checkout/payment gateway session, which should trigger the cancellation webhook.
+            if (isCancelled) {
+                log.info("Expired the checkout session successfully for order {}", payment.getOrderId());
+                return ResponseEntity.ok("Payment cancelled for order " + payment.getOrderId() + ".");
+            } else {
+                log.info("Could not expire the checkout session for order {}.", payment.getOrderId());
+                return ResponseEntity.ok("Payment could not be cancelled for order " + payment.getOrderId() + ".");
+            }
         } catch (Exception e) {
             log.error("Failed to process cancel callback for transaction {} (order {}): {}", paymentId, payment.getOrderId(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error processing payment cancellation for order " + payment.getOrderId());
         }
+    }
+
+    private PaymentGatewayService getPaymentGatewayService(String paymentGateway) {
+        PaymentGatewayService service = null;
+        if (PaymentGatewayService.STRIPE.equalsIgnoreCase(paymentGateway)) {
+            service = paymentGatewayServices.get("stripePaymentGatewayService");
+        } else if ("RAZORPAY".equalsIgnoreCase(paymentGateway)) {
+            service = paymentGatewayServices.get("razorpayPaymentGatewayService");
+        }
+
+        if (service == null) {
+            throw new IllegalArgumentException("Unsupported payment gateway: " + paymentGateway);
+        }
+        return service;
     }
 
 

@@ -16,7 +16,6 @@ public class StripeApiProperties {
     @Value("${stripe.api.webhook.sg-key}")
     private String webhookSigningKey;
 
-    @Value("${stripe.checkout.session.duration.minutes:30}")
+    @Value("${stripe.checkout.session.duration.minutes}")
     private Long durationInMinutes;
-
 }

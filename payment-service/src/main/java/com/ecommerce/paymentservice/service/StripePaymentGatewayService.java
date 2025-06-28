@@ -12,6 +12,7 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
+import com.stripe.param.checkout.SessionExpireParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,16 +42,18 @@ public class StripePaymentGatewayService implements PaymentGatewayService {
 
         String successUrl = UriComponentsBuilder.fromUriString(appDomain)
                 .path("/api/payments/callback/success")
+                .queryParam("paymentGateway", STRIPE)
                 .queryParam("orderId", orderId)
-                .queryParam("session_id", "{CHECKOUT_SESSION_ID}")
+                .queryParam(MetadataConstant.SESSION_ID, "{CHECKOUT_SESSION_ID}")
                 .queryParam(MetadataConstant.PAYMENT_ID, payment.getId())
                 .build()
                 .toUriString();
 
         String cancelUrl = UriComponentsBuilder.fromUriString(appDomain)
                 .path("/api/payments/callback/cancel")
+                .queryParam("paymentGateway", STRIPE)
                 .queryParam("orderId", orderId)
-                .queryParam("session_id", "{CHECKOUT_SESSION_ID}")
+                .queryParam(MetadataConstant.SESSION_ID, "{CHECKOUT_SESSION_ID}")
                 .queryParam(MetadataConstant.PAYMENT_ID, payment.getId())
                 .build()
                 .toUriString();
@@ -111,6 +114,19 @@ public class StripePaymentGatewayService implements PaymentGatewayService {
             // 3. Update payment transaction status to FAILED on error
             updateFailedPayment(e, payment);
             throw new PaymentGatewayException("Error creating Stripe checkout session: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean cancelPayment(String sessionId) {
+        try {
+            Session resource = Session.retrieve(sessionId);
+            SessionExpireParams params = SessionExpireParams.builder().build();
+            Session session = resource.expire(params);
+            return true;
+        } catch (StripeException e) {
+            log.error("Error occurred while cancelling checkout : {}", e.getLocalizedMessage());
+            return false;
         }
     }
 

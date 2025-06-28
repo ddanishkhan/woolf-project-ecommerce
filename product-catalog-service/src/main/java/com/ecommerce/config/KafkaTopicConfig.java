@@ -8,7 +8,8 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicConfig {
 
-    public static final String ORDERS_TOPIC = "orders.created";
+    public static final String ORDERS_STOCK_RESERVATION_RESERVE = "orders.stock.reservation.reserve";
+    public static final String ORDERS_STOCK_RESERVATION_RELEASE = "orders.stock.reservation.release";
     public static final String STOCK_RESULTS_TOPIC = "stock.reservation.results";
 
     @Bean

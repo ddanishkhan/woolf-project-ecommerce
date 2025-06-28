@@ -1,6 +1,7 @@
 package com.ecommerce.ordermanagement.config;
 
 import com.ecommerce.ordermanagement.events.dto.OrderEvent;
+import com.ecommerce.ordermanagement.events.dto.OrderReceiptGenerationEvent;
 import com.ecommerce.ordermanagement.events.dto.ReleaseStockEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -31,7 +32,6 @@ public class KafkaProducerConfig {
         return new KafkaTemplate<>(orderEventProducerFactory());
     }
 
-
     @Bean
     public ProducerFactory<String, ReleaseStockEvent> releaseStockEventProducerFactory() {
         return getKafkaProducerFactory();
@@ -40,6 +40,15 @@ public class KafkaProducerConfig {
     @Bean
     public KafkaTemplate<String, ReleaseStockEvent> releaseStockEventKafkaTemplate() {
         return new KafkaTemplate<>(releaseStockEventProducerFactory());
+    }
+
+    @Bean
+    public ProducerFactory<String, OrderReceiptGenerationEvent> orderPaidEventProducerFactory() {
+        return getKafkaProducerFactory();
+    }
+    @Bean
+    public KafkaTemplate<String, OrderReceiptGenerationEvent> orderPaidEventKafkaTemplate() {
+        return new KafkaTemplate<>(orderPaidEventProducerFactory());
     }
 
     private <T> DefaultKafkaProducerFactory<String, T> getKafkaProducerFactory() {

@@ -10,6 +10,7 @@ import com.ecommerce.dto.request.StockUpdateItem;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.elasticsearch.model.ProductDocument;
 import com.ecommerce.elasticsearch.repository.ProductSearchRepository;
+import com.ecommerce.events.dto.OrderItem;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.model.ProductEntity;
 import com.ecommerce.repository.CategoryRepository;
@@ -173,7 +174,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             List<UUID> productIds = request.getItems().stream()
                     .map(StockUpdateItem::getProductId)
-                    .collect(Collectors.toList());
+                    .toList();
 
             // 1. Fetch all requested products
             Map<UUID, ProductEntity> productsById = productRepository.findAllById(productIds).stream()
@@ -199,6 +200,41 @@ public class ProductServiceImpl implements ProductService {
             // 4. Save all modified products.
             // Atomic operation, If any save fails (e.g., OptimisticLockException),
             // all changes will be rolled back.
+            productRepository.saveAll(productsById.values());
+
+        } catch (OptimisticLockException ex) {
+            throw new IllegalStateException("Could not update stock due to a concurrent modification. Please try again.");
+        }
+    }
+
+    @Transactional
+    @Override
+    public void incrementStockBatch(BatchStockUpdateRequest request) {
+        try {
+            List<UUID> productIds = request.getItems().stream()
+                    .map(StockUpdateItem::getProductId)
+                    .toList();
+
+            // 1. Fetch all products
+            Map<UUID, ProductEntity> productsById = productRepository.findAllById(productIds).stream()
+                    .collect(Collectors.toMap(ProductEntity::getId, product -> product));
+
+            // 2. Validate all items before making any changes.
+            for (StockUpdateItem item : request.getItems()) {
+                ProductEntity product = productsById.get(item.getProductId());
+                if (product == null) {
+                    throw new ProductNotFoundException("Product not found with ID: " + item.getProductId());
+                }
+            }
+
+            // 3. If all validations pass, perform the updates.
+            for (StockUpdateItem item : request.getItems()) {
+                ProductEntity product = productsById.get(item.getProductId());
+                product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
+            }
+
+            // 4. Save all modified products.
+            // Atomic operation, If any save fails (e.g., OptimisticLockException), all changes will be rolled back.
             productRepository.saveAll(productsById.values());
 
         } catch (OptimisticLockException ex) {

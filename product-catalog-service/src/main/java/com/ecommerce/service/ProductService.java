@@ -18,4 +18,5 @@ public interface ProductService {
     ProductResponse updateProductById(UUID id, ProductRequest productRequest)  throws ProductNotFoundException;
     void decrementStock(UUID productId, StockUpdateRequest request);
     void decrementStockBatch(BatchStockUpdateRequest request);
+    void incrementStockBatch(BatchStockUpdateRequest request);
 }

@@ -25,7 +25,7 @@ public class OrderPaidListener {
 
     @KafkaListener(
             containerFactory = "kafkaListenerContainerFactory",
-            topics = KafkaProperties.ORDERS_PAID_TOPIC,
+            topics = KafkaProperties.ORDERS_RECEIPT_TOPIC,
             groupId = KafkaProperties.NOTIFICATION_SERVICE_GROUP)
     public void handleOrderPaidEvent(@Payload OrderPaidEvent event) {
         log.info("Received paid order event for order ID: {}", event.getOrderId());

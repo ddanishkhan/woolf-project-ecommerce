@@ -1,5 +1,6 @@
 package com.ecommerce.events.listener;
 
+import com.ecommerce.config.KafkaConsumerConfig;
 import com.ecommerce.config.KafkaTopicConfig;
 import com.ecommerce.dto.request.BatchStockUpdateRequest;
 import com.ecommerce.dto.request.StockUpdateItem;
@@ -12,22 +13,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OrderCreatedListener {
+public class OrderStockReservationListener {
 
     private final ProductService productService;
     private final StockEventPublisher stockEventPublisher;
 
     @KafkaListener(
             containerFactory = "orderEventListenerContainerFactory",
-            topics = KafkaTopicConfig.ORDERS_TOPIC,
-            groupId = "product-catalog-group"
+            topics = KafkaTopicConfig.ORDERS_STOCK_RESERVATION_RESERVE,
+            groupId = KafkaConsumerConfig.GROUP_ID
     )
-    public void handleOrderCreatedEvent(@Payload OrderEvent event) {
+    public void handleOrderStockReservationEvent(@Payload OrderEvent event) {
         log.info("Received order created event for order ID: {}", event.getOrderId());
         StockReservationEvent reservationResult;
 
@@ -35,13 +35,8 @@ public class OrderCreatedListener {
             BatchStockUpdateRequest stockRequest = new BatchStockUpdateRequest();
             stockRequest.setItems(
                     event.getItems().stream()
-                            .map(item -> {
-                                StockUpdateItem sui = new StockUpdateItem();
-                                sui.setProductId(item.getProductId());
-                                sui.setQuantity(item.getQuantity());
-                                return sui;
-                            })
-                            .collect(Collectors.toList())
+                            .map(item -> new StockUpdateItem(item.getProductId(), item.getQuantity()))
+                            .toList()
             );
 
             productService.decrementStockBatch(stockRequest);
@@ -56,4 +51,25 @@ public class OrderCreatedListener {
 
         stockEventPublisher.publishStockReservationEvent(reservationResult);
     }
+
+    @KafkaListener(
+            containerFactory = "orderEventListenerContainerFactory",
+            topics = KafkaTopicConfig.ORDERS_STOCK_RESERVATION_RELEASE,
+            groupId = KafkaConsumerConfig.GROUP_ID
+    )
+    public void handleOrderStockReleaseEvent(@Payload OrderEvent event) {
+        log.info("Received inventory restocking event for order ID: {}", event.getOrderId());
+
+        BatchStockUpdateRequest stockRequest = new BatchStockUpdateRequest();
+        stockRequest.setItems(
+                event.getItems().stream()
+                        .map(item -> new StockUpdateItem(item.getProductId(), item.getQuantity()))
+                        .toList()
+        );
+
+        productService.incrementStockBatch(stockRequest);
+        log.info("Stock successfully updated for order ID: {}", event.getOrderId());
+
+    }
+
 }
