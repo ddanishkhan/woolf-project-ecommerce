@@ -39,8 +39,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             String providerId = oauth2User.getName();
 
             User localUser = userService.processOAuth2User(providerId, email, name, registrationId);
-
-//            String jwtSubject = localUser.getUsername();
             String displayName = localUser.getDisplayName();
 
             // Get authorities from the localUser's roles

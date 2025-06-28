@@ -117,38 +117,24 @@ public class AuthController {
         return ResponseEntity.badRequest().body("Logout failed: No token provided or token malformed.");
     }
 
-    //TODO: incomplete.
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
         User user = userService.findByEmail(forgotPasswordRequest.getEmail());
         if (user == null) {
+            log.warn("Email {} not found to reset password. ", forgotPasswordRequest.getEmail());
             return ResponseEntity.ok(new MessageResponse("If an account with this email exists, a password reset link has been sent."));
         }
-        String token = userService.createPasswordResetTokenForUser(user);
-        String resetLink = "https://yourapp.com/reset-password?token=" + token;
-        log.info("Password Reset Link (for user {}): {}", user.getEmail(), resetLink);
-        return ResponseEntity.ok(new MessageResponse("If an account with this email exists, a password reset link has been sent."));
+        return userService.createPasswordResetTokenForUser(user);
     }
 
+    /**
+     * For processing the password reset link of the user.
+     * @param resetPasswordRequest The request containing new password and the reset token.
+     * @return If password was reset successfully.
+     */
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
-        Optional<PasswordResetToken> tokenOptional = userService.getPasswordResetToken(resetPasswordRequest.getToken());
-        if (tokenOptional.isEmpty()) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Invalid or missing password reset token."));
-        }
-        PasswordResetToken resetToken = tokenOptional.get();
-        if (resetToken.isExpired()) {
-            passwordResetTokenRepository.delete(resetToken);
-            return ResponseEntity.badRequest().body(new MessageResponse("Password reset token has expired."));
-        }
-        if (resetToken.isUsed()) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Password reset token has already been used."));
-        }
-        User user = resetToken.getUser();
-        userService.changeUserPassword(user, resetPasswordRequest.getNewPassword()); // This now revokes all tokens
-        resetToken.setUsed(true);
-        passwordResetTokenRepository.save(resetToken);
-        return ResponseEntity.ok(new MessageResponse("Password has been successfully reset. All previous sessions have been invalidated."));
+        return userService.resetPassword(resetPasswordRequest);
     }
 
     private String extractJwtFromRequest(HttpServletRequest request) {

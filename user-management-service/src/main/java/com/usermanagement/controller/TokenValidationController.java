@@ -27,6 +27,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TokenValidationController {
 
+    public static final String RESPONSE_KEY_VALID = "valid";
+    public static final String RESPONSE_KEY_ERROR = "error";
+    public static final String RESPONSE_KEY_USERNAME = "username";
+    public static final String RESPONSE_KEY_AUTHORITIES = "authorities";
+    public static final String RESPONSE_KEY_JTI = "jti";
+
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenBlacklistService tokenBlacklistService;
 
@@ -51,8 +57,8 @@ public class TokenValidationController {
 
                 // Check blacklist
                 if (tokenBlacklistService.isBlacklisted(jti)) {
-                    response.put("valid", false);
-                    response.put("error", "Token has been revoked (blacklisted)");
+                    response.put(RESPONSE_KEY_VALID, false);
+                    response.put(RESPONSE_KEY_ERROR, "Token has been revoked (blacklisted)");
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
                 }
 
@@ -62,50 +68,46 @@ public class TokenValidationController {
                     List<GrantedAuthority> authorities = jwtTokenProvider.getAuthoritiesFromJWT(jwt);
                     List<String> roles = authorities.stream()
                             .map(GrantedAuthority::getAuthority)
-                            .collect(Collectors.toList());
+                            .toList();
 
-                    response.put("valid", true);
-                    response.put("username", username);
-                    response.put("authorities", roles);
-                    // Optionally add JTI to response
-                    response.put("jti", jti);
-                    // Claims claims = jwtTokenProvider.getAllClaimsFromToken(jwt);
-                    // response.put("issuedAt", claims.getIssuedAt());
-                    // response.put("expiresAt", claims.getExpiration());
+                    response.put(RESPONSE_KEY_VALID, true);
+                    response.put(RESPONSE_KEY_USERNAME, username);
+                    response.put(RESPONSE_KEY_AUTHORITIES, roles);
+                    response.put(RESPONSE_KEY_JTI, jti);
 
                     return ResponseEntity.ok(response);
                 } else {
                     // This 'else' might be theoretically unreachable if validateToken always throws on failure
-                    response.put("valid", false);
-                    response.put("error", "Invalid token (unknown validation issue)");
+                    response.put(RESPONSE_KEY_VALID, false);
+                    response.put(RESPONSE_KEY_ERROR, "Invalid token (unknown validation issue)");
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
                 }
             } catch (ExpiredJwtException ex) {
-                response.put("valid", false);
-                response.put("error", "Expired JWT token");
-                response.put("jti", ex.getClaims().getId());
+                response.put(RESPONSE_KEY_VALID, false);
+                response.put(RESPONSE_KEY_ERROR, "Expired JWT token");
+                response.put(RESPONSE_KEY_JTI, ex.getClaims().getId());
                 response.put("expiredAt", ex.getClaims().getExpiration());
             } catch (SignatureException ex) {
-                response.put("valid", false);
-                response.put("error", "Invalid JWT signature");
+                response.put(RESPONSE_KEY_VALID, false);
+                response.put(RESPONSE_KEY_ERROR, "Invalid JWT signature");
             } catch (MalformedJwtException ex) {
-                response.put("valid", false);
-                response.put("error", "Invalid JWT token (malformed)");
+                response.put(RESPONSE_KEY_VALID, false);
+                response.put(RESPONSE_KEY_ERROR, "Invalid JWT token (malformed)");
             } catch (UnsupportedJwtException ex) {
-                response.put("valid", false);
-                response.put("error", "Unsupported JWT token");
+                response.put(RESPONSE_KEY_VALID, false);
+                response.put(RESPONSE_KEY_ERROR, "Unsupported JWT token");
             } catch (IllegalArgumentException ex) { // empty or null token string to parser
-                response.put("valid", false);
-                response.put("error", "JWT claims string is empty or token is invalid.");
+                response.put(RESPONSE_KEY_VALID, false);
+                response.put(RESPONSE_KEY_ERROR, "JWT claims string is empty or token is invalid.");
             } catch (JwtException ex) {
-                response.put("valid", false);
-                response.put("error", "JWT processing error: " + ex.getMessage());
+                response.put(RESPONSE_KEY_VALID, false);
+                response.put(RESPONSE_KEY_ERROR, "JWT processing error: " + ex.getMessage());
             }
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } else {
-            response.put("valid", false);
-            response.put("error", "Authorization header missing or does not contain Bearer token");
+            response.put(RESPONSE_KEY_VALID, false);
+            response.put(RESPONSE_KEY_ERROR, "Authorization header missing or does not contain Bearer token");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }

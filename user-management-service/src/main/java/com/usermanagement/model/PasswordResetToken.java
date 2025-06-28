@@ -9,12 +9,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Setter
@@ -36,16 +34,15 @@ public class PasswordResetToken {
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
-    private Date expiryDate;
+    private LocalDateTime expiryDate;
 
     @Column(nullable = false)
     private boolean used = false;
 
     public PasswordResetToken() {
         this.token = UUID.randomUUID().toString();
-        this.expiryDate = calculateExpiryDate(EXPIRATION_MINUTES);
+        this.expiryDate = calculateExpiryDate();
     }
 
     public PasswordResetToken(User user) {
@@ -53,14 +50,12 @@ public class PasswordResetToken {
         this.user = user;
     }
 
-    private Date calculateExpiryDate(int expiryTimeInMinutes) {
-        Date now = new Date();
-        long expiryTimeInMilliseconds = now.getTime() + ((long) expiryTimeInMinutes * 60 * 1000);
-        return new Date(expiryTimeInMilliseconds);
+    private LocalDateTime calculateExpiryDate() {
+        return LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
     }
 
     public boolean isExpired() {
-        return new Date().after(this.expiryDate);
+        return LocalDateTime.now().isAfter(this.expiryDate);
     }
 
 }

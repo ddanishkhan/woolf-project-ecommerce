@@ -13,8 +13,7 @@ public class ResetPasswordRequest {
     private String token;
 
     @NotBlank
-    @Size(min = 6, message = "Password must be at least 8 characters long")
-    //TODO Add other password complexity validation if needed (e.g., @Pattern)
+    @Size(min = 8, message = "Password must be at least 8 characters long.")
     private String newPassword;
 
 }

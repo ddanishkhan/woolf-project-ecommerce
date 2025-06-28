@@ -18,7 +18,6 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    @Autowired
     private final UserRepository userRepository;
 
     @Override

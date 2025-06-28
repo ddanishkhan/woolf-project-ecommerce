@@ -29,7 +29,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    private static final String ROLES = "roles";
+
+    public static final String CLAIM_ROLES = "roles";
+    public static final String CLAIM_USERNAME = "username";
+    public static final String CLAIM_EMAIL = "email";
+    public static final String CLAIM_NAME = "name";
+
     private static final SecureDigestAlgorithm<SecretKey, ?> HS_512 = Jwts.SIG.HS512;
 
     private final UserActiveTokenRepository userActiveTokenRepository;
@@ -62,10 +67,10 @@ public class JwtTokenProvider {
         String tokenString = Jwts
                 .builder()
                 .id(jti)
-                .claim("name", name)
-                .claim("username", user.getUsername())
-                .claim(ROLES, roles)
-                .claim("email", user.getEmail())
+                .claim(CLAIM_NAME, name)
+                .claim(CLAIM_USERNAME, user.getUsername())
+                .claim(CLAIM_ROLES, roles)
+                .claim(CLAIM_EMAIL, user.getEmail())
                 .subject(user.getId().toString())
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -88,12 +93,12 @@ public class JwtTokenProvider {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        String jti = "srv_" + UUID.randomUUID().toString();
+        String jti = "srv_" + UUID.randomUUID();
         return Jwts
                 .builder()
                 .id(jti)
-                .claim("username", username)
-                .claim(ROLES, roles)
+                .claim(CLAIM_USERNAME, username)
+                .claim(CLAIM_ROLES, roles)
                 .subject(username)
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -102,7 +107,7 @@ public class JwtTokenProvider {
     }
 
     public String getUsernameFromJWT(String token) {
-        return extractClaim(token, claims -> claims.get("username", String.class));
+        return extractClaim(token, claims -> claims.get(CLAIM_USERNAME, String.class));
     }
 
     public String getJtiFromJWT(String token) {
@@ -122,7 +127,7 @@ public class JwtTokenProvider {
     public List<GrantedAuthority> getAuthoritiesFromJWT(String token) {
         Claims claims = getAllClaimsFromToken(token);
         @SuppressWarnings("unchecked")
-        List<String> roles = claims.get(ROLES, List.class);
+        List<String> roles = claims.get(CLAIM_ROLES, List.class);
         if (roles == null) {
             return List.of();
         }
@@ -142,7 +147,7 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return (String) claims.get("email");
+        return (String) claims.get(CLAIM_EMAIL);
     }
 
     // Generic method to extract any claim from the token

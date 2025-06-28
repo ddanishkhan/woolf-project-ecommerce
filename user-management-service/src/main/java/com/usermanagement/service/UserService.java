@@ -1,7 +1,11 @@
 package com.usermanagement.service;
 
+import com.usermanagement.dto.ResetPasswordRequest;
 import com.usermanagement.dto.UpdateProfileRequest;
+import com.usermanagement.dto.response.MessageResponse;
 import com.usermanagement.dto.response.ProfileResponse;
+import com.usermanagement.events.dto.PasswordResetTokenEvent;
+import com.usermanagement.events.publisher.PasswordResetTokenEventPublisher;
 import com.usermanagement.exception.UserAlreadyExistsException;
 import com.usermanagement.exception.UserNotFoundException;
 import com.usermanagement.model.AuthProvider;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,6 +44,7 @@ public class UserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final TokenBlacklistService tokenBlacklistService;
     private final UserActiveTokenRepository userActiveTokenRepository;
+    private final PasswordResetTokenEventPublisher resetTokenEventPublisher;
 
     @Autowired
     public void setPasswordEncoder(@Lazy PasswordEncoder passwordEncoder) {
@@ -148,18 +154,48 @@ public class UserService {
     }
 
     @Transactional
-    public String createPasswordResetTokenForUser(User user) {
-        passwordResetTokenRepository.findByUser(user).ifPresent(passwordResetTokenRepository::delete);
-        PasswordResetToken myToken = new PasswordResetToken(user);
+    public ResponseEntity<MessageResponse> createPasswordResetTokenForUser(User user) {
+        PasswordResetToken myToken = passwordResetTokenRepository.findByUser(user)
+                .orElse(new PasswordResetToken(user)); // If no token, create a new one
         passwordResetTokenRepository.save(myToken);
-        return myToken.getToken();
+        String token = myToken.getToken();
+        String resetLink = "http://localhost:8005/reset-password?token=" + token;
+        log.info("Password Reset Link (for user {}) Generated, expires at: {}", user.getEmail(), myToken.getExpiryDate());
+        //send to notification service to send email.
+        resetTokenEventPublisher.publishEvent(new PasswordResetTokenEvent(user.getEmail(), resetLink, myToken.getExpiryDate()));
+        return ResponseEntity.ok(new MessageResponse("If an account with this email exists, a password reset link has been sent."));
+    }
+
+
+    @Transactional
+    public ResponseEntity<MessageResponse> resetPassword(ResetPasswordRequest resetPasswordRequest){
+        // move some parts to controller?
+        Optional<PasswordResetToken> tokenOptional = getPasswordResetToken(resetPasswordRequest.getToken());
+        if (tokenOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Invalid or missing password reset token."));
+        }
+        PasswordResetToken resetToken = tokenOptional.get();
+        if (resetToken.isExpired()) {
+            passwordResetTokenRepository.delete(resetToken);
+            return ResponseEntity.badRequest().body(new MessageResponse("Password reset token has expired."));
+        }
+        if (resetToken.isUsed()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Password reset token has already been used."));
+        }
+        User user = resetToken.getUser();
+        changeUserPassword(user, resetPasswordRequest.getNewPassword());
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+        return ResponseEntity.ok(new MessageResponse("Password has been successfully reset. All previous sessions have been invalidated."));
     }
 
     public Optional<PasswordResetToken> getPasswordResetToken(String token) {
         return passwordResetTokenRepository.findByToken(token);
     }
 
-    @Transactional
+    /**
+     * Changes the password and revokes all tokens.
+     */
     public void changeUserPassword(User user, String newPassword) {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -175,4 +211,5 @@ public class UserService {
         passwordResetTokenRepository.deleteByExpiryDateBefore(new Date());
         log.info("Purged expired password reset tokens.");
     }
+
 }
