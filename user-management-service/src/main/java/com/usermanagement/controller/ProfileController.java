@@ -1,22 +1,27 @@
 package com.usermanagement.controller;
 
 import com.usermanagement.dto.UpdateProfileRequest;
+import com.usermanagement.dto.response.CustomPageDTO;
 import com.usermanagement.dto.response.ProfileResponse;
-import com.usermanagement.exception.InvalidTokenException;
 import com.usermanagement.security.JwtTokenProvider;
 import com.usermanagement.service.UserService;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
@@ -34,8 +39,31 @@ public class ProfileController {
      */
     @GetMapping("/me")
     public ResponseEntity<ProfileResponse> getUserProfileManually(@Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader) {
-        String token = extractAndValidateToken(authorizationHeader);
+        String token = jwtTokenProvider.extractAndValidateToken(authorizationHeader);
         String email = jwtTokenProvider.getEmailFromToken(token);
+        ProfileResponse profile = userService.getUserProfileByEmail(email);
+        return ResponseEntity.ok(profile);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<CustomPageDTO<ProfileResponse>> getAllProfiles(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader,
+            PageRequest pageRequest) {
+        log.info("Get all profiles");
+        String token = jwtTokenProvider.extractAndValidateToken(authorizationHeader);
+        if (!jwtTokenProvider.isAdmin(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Page<ProfileResponse> profiles = userService.getAllProfiles(pageRequest);
+        var response = new CustomPageDTO<>(profiles.getContent(), profiles);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{email}")
+    public ResponseEntity<ProfileResponse> getProfileByEmail(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader,
+            @PathVariable String email) {
+        log.info("Get profile data for: {}", email);
+        String token = jwtTokenProvider.extractAndValidateToken(authorizationHeader);
+        if (!jwtTokenProvider.isAdmin(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         ProfileResponse profile = userService.getUserProfileByEmail(email);
         return ResponseEntity.ok(profile);
     }
@@ -52,28 +80,10 @@ public class ProfileController {
             @Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader,
             @Valid @RequestBody UpdateProfileRequest updateProfileRequest) {
 
-        String token = extractAndValidateToken(authorizationHeader);
+        String token = jwtTokenProvider.extractAndValidateToken(authorizationHeader);
         String email = jwtTokenProvider.getEmailFromToken(token);
         ProfileResponse updatedProfile = userService.updateUserProfileByEmail(email, updateProfileRequest);
         return ResponseEntity.ok(updatedProfile);
-    }
-
-    /**
-     * Helper method to extract the JWT from the header and validate it.
-     *
-     * @param authorizationHeader The full Authorization header value.
-     * @return The raw, validated token string.
-     * @throws InvalidTokenException if the token is missing or invalid.
-     */
-    private String extractAndValidateToken(String authorizationHeader) {
-        if (!StringUtils.hasText(authorizationHeader) || !authorizationHeader.startsWith("Bearer ")) {
-            throw new InvalidTokenException("Authorization header is missing or invalid.");
-        }
-        String token = authorizationHeader.substring(7);
-        if (!jwtTokenProvider.validateToken(token)) {
-            throw new InvalidTokenException("Invalid or expired JWT token.");
-        }
-        return token;
     }
 
 }

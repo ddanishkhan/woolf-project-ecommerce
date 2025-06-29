@@ -1,5 +1,7 @@
 package com.usermanagement.security;
 
+import com.usermanagement.exception.InvalidTokenException;
+import com.usermanagement.model.ERole;
 import com.usermanagement.model.User;
 import com.usermanagement.model.UserActiveToken;
 import com.usermanagement.repository.UserActiveTokenRepository;
@@ -15,6 +17,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Collection;
@@ -134,6 +137,12 @@ public class JwtTokenProvider {
         return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
+    public boolean isAdmin(String token) {
+        return getAuthoritiesFromJWT(token).stream()
+                .anyMatch(authority -> ERole.ADMIN.name().equals(authority.getAuthority()) || ERole.SUPER_ADMIN.name().equals(authority.getAuthority())
+                );
+    }
+
     public boolean validateToken(String authToken) {
         Jwts.parser().verifyWith(jwtSecretKey).build().parseSignedClaims(authToken);
         return true;
@@ -154,6 +163,24 @@ public class JwtTokenProvider {
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claimsResolver.apply(claims);
+    }
+
+    /**
+     * Helper method to extract the JWT from the header and validate it.
+     *
+     * @param authorizationHeader The full Authorization header value.
+     * @return The raw, validated token string.
+     * @throws InvalidTokenException if the token is missing or invalid.
+     */
+    public String extractAndValidateToken(String authorizationHeader) {
+        if (!StringUtils.hasText(authorizationHeader) || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidTokenException("Authorization header is missing or invalid.");
+        }
+        String token = authorizationHeader.substring(7);
+        if (!validateToken(token)) {
+            throw new InvalidTokenException("Invalid or expired JWT token.");
+        }
+        return token;
     }
 
 }

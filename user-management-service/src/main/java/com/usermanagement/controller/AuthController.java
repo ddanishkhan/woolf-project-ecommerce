@@ -1,17 +1,17 @@
 package com.usermanagement.controller;
 
 import com.usermanagement.dto.ForgotPasswordRequest;
+import com.usermanagement.dto.UpdateRoleRequest;
 import com.usermanagement.dto.response.JwtAuthenticationResponse;
 import com.usermanagement.dto.LoginRequest;
 import com.usermanagement.dto.RegisterRequest;
 import com.usermanagement.dto.ResetPasswordRequest;
 import com.usermanagement.dto.response.MessageResponse;
-import com.usermanagement.model.PasswordResetToken;
 import com.usermanagement.model.User;
-import com.usermanagement.repository.PasswordResetTokenRepository;
 import com.usermanagement.security.JwtTokenProvider;
 import com.usermanagement.service.TokenBlacklistService;
 import com.usermanagement.service.UserService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +26,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
-
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -43,7 +43,6 @@ public class AuthController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenBlacklistService tokenBlacklistService;
-    private final PasswordResetTokenRepository passwordResetTokenRepository; //FIXME use a service.
 
     @GetMapping("/login-page")
     public ModelAndView loginPage() {
@@ -88,6 +87,21 @@ public class AuthController {
                 registerRequest.getDisplayName()
         );
         return ResponseEntity.ok(new MessageResponse("User registered successfully! Please login."));
+    }
+
+    @PutMapping("/role")
+    public ResponseEntity<?> assignRole(@Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader,
+                                        @Valid @RequestBody UpdateRoleRequest updateRoleRequest) {
+        log.info("Assign role request received.");
+        String token = jwtTokenProvider.extractAndValidateToken(authorizationHeader);
+
+        if (!jwtTokenProvider.isAdmin(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        userService.updateUserRole(
+                updateRoleRequest.getEmail(),
+                updateRoleRequest.getRole()
+        );
+        return ResponseEntity.ok(new MessageResponse("User role updated successfully!"));
     }
 
     @PostMapping("/logout")

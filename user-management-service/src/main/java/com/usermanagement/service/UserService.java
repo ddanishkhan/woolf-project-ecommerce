@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -126,6 +128,12 @@ public class UserService {
         return mapUserToProfileResponse(user);
     }
 
+    public Page<ProfileResponse> getAllProfiles(Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
+        log.info("users {}", users);
+        return users.map(this::mapUserToProfileResponse);
+    }
+
     public ProfileResponse updateUserProfileByEmail(String email, UpdateProfileRequest updateProfileRequest) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
@@ -189,6 +197,13 @@ public class UserService {
         return ResponseEntity.ok(new MessageResponse("Password has been successfully reset. All previous sessions have been invalidated."));
     }
 
+    public void updateUserRole(String email, ERole eRole) {
+        var user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found for email: " + email));
+        var role = roleRepository.findByName(eRole).orElseThrow();
+        user.setRoles(new HashSet<>(Set.of(role)));
+        userRepository.save(user);
+    }
+
     public Optional<PasswordResetToken> getPasswordResetToken(String token) {
         return passwordResetTokenRepository.findByToken(token);
     }
@@ -211,5 +226,4 @@ public class UserService {
         passwordResetTokenRepository.deleteByExpiryDateBefore(new Date());
         log.info("Purged expired password reset tokens.");
     }
-
 }
