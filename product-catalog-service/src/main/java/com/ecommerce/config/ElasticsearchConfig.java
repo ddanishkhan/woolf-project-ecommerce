@@ -15,8 +15,7 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
     @Value("${spring.elasticsearch.uris}")
     private String elasticsearchUris;
 
-    // Read the API Key from application.properties
-    @Value("${spring.elasticsearch.api-key:#{null}}")
+    @Value("${spring.elasticsearch.api-key}")
     private String apiKey;
 
     @Override

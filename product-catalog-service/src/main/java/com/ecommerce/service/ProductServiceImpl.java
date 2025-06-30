@@ -143,7 +143,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public void decrementStock(UUID productId, StockUpdateRequest request) {
+    public void decrementStockQuantity(UUID productId, StockUpdateRequest request) {
         try {
             // 1. Find the product by its ID
             ProductEntity product = productRepository.findById(productId)
@@ -156,6 +156,27 @@ public class ProductServiceImpl implements ProductService {
 
             // 3. Decrement the quantity
             product.setStockQuantity(product.getStockQuantity() - request.getQuantity());
+
+            // 4. Save the product. JPA will use the @Version field automatically.
+            // If another transaction has updated this product since we read it,
+            // the version numbers won't match, and this will throw an OptimisticLockException.
+            productRepository.save(product);
+
+        } catch (OptimisticLockException ex) {
+            // handles the overbooking race condition.
+            throw new IllegalStateException("Could not update stock due to a concurrent modification. Please try again.");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void incrementStockQuantity(UUID productId, StockUpdateRequest request) {
+        try {
+            // 1. Find the product by its ID
+            ProductEntity product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
+
+            product.setStockQuantity(product.getStockQuantity() + request.getQuantity());
 
             // 4. Save the product. JPA will use the @Version field automatically.
             // If another transaction has updated this product since we read it,

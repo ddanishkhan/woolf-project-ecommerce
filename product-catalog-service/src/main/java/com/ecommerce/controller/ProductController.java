@@ -2,7 +2,6 @@ package com.ecommerce.controller;
 
 import com.ecommerce.dto.CustomPageDTO;
 import com.ecommerce.dto.StockUpdateRequest;
-import com.ecommerce.dto.request.BatchStockUpdateRequest;
 import com.ecommerce.dto.request.CreateCategoryRequest;
 import com.ecommerce.dto.request.ProductRequest;
 import com.ecommerce.dto.response.CategoryResponse;
@@ -117,35 +116,37 @@ public class ProductController {
 
 
     @PostMapping("/products")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'ADMIN', 'EDITOR')")
     public ResponseEntity<ProductResponse> addNewProduct(@Valid @RequestBody ProductRequest productRequestBody) {
         var product = productService.createNewProduct(productRequestBody);
         return ResponseEntity.status(HttpStatus.CREATED).body(product); // Return 201 Created
     }
 
     @PutMapping("/products/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'ADMIN', 'EDITOR')")
     public ResponseEntity<ProductResponse> updateProductDetail(@PathVariable UUID id, @RequestBody ProductRequest productRequest) throws ProductNotFoundException {
         var product = productService.updateProductById(id, productRequest);
         return ResponseEntity.ok(product);
     }
 
     @DeleteMapping("/products/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'ADMIN', 'EDITOR')")
     public ResponseEntity<Void> deleteProductById(@PathVariable UUID id) throws ProductNotFoundException {
         productService.deleteProductById(id);
         return ResponseEntity.noContent().build(); // Return 204 No Content
     }
 
-    @PostMapping("/products/{id}/stock/decrement")
-    public ResponseEntity<Void> decrementStock(@PathVariable("id") UUID id, @RequestBody StockUpdateRequest request) {
-        productService.decrementStock(id, request);
+    @PatchMapping("/products/{id}/stock/decrease")
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'ADMIN', 'EDITOR')")
+    public ResponseEntity<Void> decrementStockQuantity(@PathVariable("id") UUID id, @Valid @RequestBody StockUpdateRequest request) {
+        productService.decrementStockQuantity(id, request);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/stock/decrement-batch")
-    public ResponseEntity<Void> decrementStockBatch(@Valid @RequestBody BatchStockUpdateRequest request) {
-        productService.decrementStockBatch(request);
+    @PatchMapping("/products/{id}/stock/increase")
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'ADMIN', 'EDITOR')")
+    public ResponseEntity<Void> incrementStockQuantity(@PathVariable("id") UUID id, @Valid @RequestBody StockUpdateRequest request) {
+        productService.incrementStockQuantity(id, request);
         return ResponseEntity.ok().build();
     }
 
