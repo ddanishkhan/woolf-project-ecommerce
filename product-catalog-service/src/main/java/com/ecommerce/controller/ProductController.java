@@ -4,6 +4,7 @@ import com.ecommerce.dto.CustomPageDTO;
 import com.ecommerce.dto.StockUpdateRequest;
 import com.ecommerce.dto.request.CreateCategoryRequest;
 import com.ecommerce.dto.request.ProductRequest;
+import com.ecommerce.dto.request.UpdateCategoryRequest;
 import com.ecommerce.dto.response.CategoryResponse;
 import com.ecommerce.dto.response.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
@@ -49,6 +50,17 @@ public class ProductController {
     @PostMapping("/categories")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CreateCategoryRequest createCategoryRequest) {
         return ResponseEntity.ok(categoryService.createCategory(createCategoryRequest.getName()));
+    }
+
+    @PatchMapping("/categories/{categoryId}/update")
+    public ResponseEntity<CategoryResponse> updateCategory(@PathVariable UUID categoryId, @Valid @RequestBody UpdateCategoryRequest updateCategoryRequest) {
+        return ResponseEntity.ok(categoryService.updateCategory(categoryId, updateCategoryRequest.getName()));
+    }
+
+    @DeleteMapping("/categories/{categoryId}")
+    public ResponseEntity<CategoryResponse> deleteCategory(@PathVariable UUID categoryId) {
+        categoryService.deleteCategory(categoryId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/products")
