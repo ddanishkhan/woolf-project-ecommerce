@@ -12,6 +12,7 @@ import com.ecommerce.service.CategoryService;
 import com.ecommerce.service.ProductService;
 import com.ecommerce.service.SearchService;
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -87,29 +88,31 @@ public class ProductController {
 
     // Elasticsearch-powered search endpoints
 
-    @GetMapping("/products/search")
+    @Operation(summary = "Fuzzy search in products name or description.")
+    @GetMapping("/products/search-fuzzy")
     public ResponseEntity<CustomPageDTO<ProductResponse>> searchProducts(
-            @RequestParam("query") String query,
+            @RequestParam("query") String nameOrDescription,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        CustomPageDTO<ProductResponse> results = searchService.fuzzySearchInProductNameAndDescription(query, pageable);
+        CustomPageDTO<ProductResponse> results = searchService.fuzzySearchInProductNameAndDescription(nameOrDescription, pageable);
         return ResponseEntity.ok(results);
     }
 
-    @GetMapping("/products/search/keyword")
-    public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam String keyword) {
+    @Operation(summary = "Keyword search in products name or description.")
+    @GetMapping("/products/search-keyword")
+    public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam("query") String nameOrDescription) {
         // This is a generic keyword search.
-        List<ProductResponse> products = searchService.searchProductsByKeyword(keyword);
+        List<ProductResponse> products = searchService.searchProductsByNameOrDescriptionByKeyword(nameOrDescription);
         if (products.isEmpty()) {
             return ResponseEntity.ok(Collections.emptyList());
         }
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/products/search/name")
-    public ResponseEntity<List<ProductResponse>> searchProductsByName(@RequestParam String name) {
+    @GetMapping("/products/search-keyword/name/{name}")
+    public ResponseEntity<List<ProductResponse>> searchProductsByName(@PathVariable String name) {
         List<ProductResponse> products = searchService.searchProductsByName(name);
         if (products.isEmpty()) {
             return ResponseEntity.noContent().build();
@@ -117,8 +120,8 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/products/search/category")
-    public ResponseEntity<List<ProductResponse>> searchProductsByCategory(@RequestParam String category) {
+    @GetMapping("/products/search-keyword/category/{category}")
+    public ResponseEntity<List<ProductResponse>> searchProductsByCategory(@PathVariable String category) {
         List<ProductResponse> products = searchService.searchProductsByCategory(category);
         if (products.isEmpty()) {
             return ResponseEntity.noContent().build();

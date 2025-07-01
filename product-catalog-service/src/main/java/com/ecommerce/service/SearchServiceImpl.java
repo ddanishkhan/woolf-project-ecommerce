@@ -45,7 +45,7 @@ public class SearchServiceImpl implements SearchService{
      * This is a simple OR search on name and description.
      **/
     @Override
-    public List<ProductResponse> searchProductsByKeyword(String keyword) {
+    public List<ProductResponse> searchProductsByNameOrDescriptionByKeyword(String keyword) {
         log.debug("Searching products by keyword in Elasticsearch: {}", keyword);
         List<ProductDocument> documents = productSearchRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
         return documents.stream()

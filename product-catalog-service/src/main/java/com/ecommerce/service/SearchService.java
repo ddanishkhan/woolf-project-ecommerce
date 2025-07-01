@@ -10,7 +10,7 @@ public interface SearchService {
     // for Elasticsearch search
     List<ProductResponse> searchProductsByName(String name);
     List<ProductResponse> searchProductsByCategory(String category);
-    List<ProductResponse> searchProductsByKeyword(String keyword);
+    List<ProductResponse> searchProductsByNameOrDescriptionByKeyword(String keyword);
 
     /**
      * Searches for products using a fuzzy query for typo tolerance.
