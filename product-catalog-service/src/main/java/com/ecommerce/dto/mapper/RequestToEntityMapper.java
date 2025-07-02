@@ -1,6 +1,6 @@
 package com.ecommerce.dto.mapper;
 
-import com.ecommerce.dto.request.ProductRequest;
+import com.ecommerce.dtos.product.ProductRequest;
 import com.ecommerce.model.CategoryEntity;
 import com.ecommerce.model.ProductEntity;
 

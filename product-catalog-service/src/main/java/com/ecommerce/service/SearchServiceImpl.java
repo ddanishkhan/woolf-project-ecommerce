@@ -2,7 +2,7 @@ package com.ecommerce.service;
 
 import com.ecommerce.dto.CustomPageDTO;
 import com.ecommerce.dto.mapper.EntityToResponseMapper;
-import com.ecommerce.dto.response.ProductResponse;
+import com.ecommerce.dtos.product.ProductResponse;
 import com.ecommerce.elasticsearch.model.ProductDocument;
 import com.ecommerce.elasticsearch.repository.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;

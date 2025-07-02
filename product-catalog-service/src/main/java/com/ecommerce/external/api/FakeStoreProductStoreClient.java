@@ -1,7 +1,7 @@
 package com.ecommerce.external.api;
 
-import com.ecommerce.dto.request.ProductRequest;
-import com.ecommerce.dto.response.ProductResponse;
+import com.ecommerce.dtos.product.ProductRequest;
+import com.ecommerce.dtos.product.ProductResponse;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;

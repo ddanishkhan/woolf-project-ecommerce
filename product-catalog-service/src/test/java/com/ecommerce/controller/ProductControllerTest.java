@@ -1,10 +1,10 @@
 package com.ecommerce.controller;
 
+import com.ecommerce.config.CustomJwtDecoder;
 import com.ecommerce.dto.CustomPageDTO;
-import com.ecommerce.dto.request.ProductRequest;
-import com.ecommerce.dto.response.ProductResponse;
+import com.ecommerce.dtos.product.ProductRequest;
+import com.ecommerce.dtos.product.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
-import com.ecommerce.service.JwtService;
 import com.ecommerce.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -22,6 +22,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,7 +45,7 @@ class ProductControllerTest {
     private ProductService productService;
 
     @MockitoBean
-    private JwtService jwtService;
+    private CustomJwtDecoder jwtDecoder;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -69,7 +70,7 @@ class ProductControllerTest {
     void getAllProductsReturnProducts() throws Exception {
 
         ProductResponse product1 = new ProductResponse(
-                UUID.fromString("feecadf2-e74c-4a06-9e32-2e6d757158b2"), "Laptop", 1000.0, "Electronics", "Best Laptop", 1, "url.com");
+                UUID.fromString("feecadf2-e74c-4a06-9e32-2e6d757158b2"), "Laptop", new BigDecimal("1000.0"), "Electronics", "Best Laptop", 1, "url.com");
         List<ProductResponse> productListResponseDTO = List.of(product1);
         Page page = new PageImpl(productListResponseDTO, Pageable.ofSize(10), 1);
         var res = new CustomPageDTO<>(productListResponseDTO, page);
@@ -96,7 +97,7 @@ class ProductControllerTest {
     @WithMockUser
     void findProductByIdSuccess() throws Exception {
         var id = UUID.fromString("feecadf2-e74c-4a06-9e32-2e6d757158b2");
-        var productResponse = new ProductResponse(id, "Laptop", 1000.0, "Electronics", "Best Laptop", 1,"url.com");
+        var productResponse = new ProductResponse(id, "Laptop", new BigDecimal("1000.0"), "Electronics", "Best Laptop", 1,"url.com");
         var respString = convertToJson(productResponse);
 
         when(productService.getProductById(id)).thenReturn(productResponse);
@@ -111,9 +112,9 @@ class ProductControllerTest {
         var id = UUID.fromString("abcdadf2-e74c-4a06-1111-2e6d757158b2");
         var categoryId = UUID.randomUUID();
         var productName = "Laptop";
-        var productResponse = new ProductResponse(id, productName, 1001.0, "Electronics", "Best Laptop", 1, "url.com");
+        var productResponse = new ProductResponse(id, productName, new BigDecimal("1001.0"), "Electronics", "Best Laptop", 1, "url.com");
         var respString = convertToJson(productResponse);
-        ProductRequest productRequest = new ProductRequest(productName, 1001.0, categoryId, "Best Laptop",1, "url.com");
+        ProductRequest productRequest = new ProductRequest(productName, new BigDecimal("1001.0"), categoryId, "Best Laptop",1, "url.com");
         var requestJson = convertToJson(productResponse);
         when(productService.createNewProduct(productRequest)).thenReturn(productResponse);
         mockMvc.perform(post("/products").with(csrf()).content(requestJson).contentType(APPLICATION_JSON))
@@ -127,9 +128,9 @@ class ProductControllerTest {
         var id = UUID.fromString("abcdadf2-e74c-4a06-2222-2e6d757158b2");
         var categoryId = UUID.randomUUID();
         var productName = "Laptop";
-        var productResponse = new ProductResponse(id, productName, 1002.0, "Electronics", "Best Laptop", 1, "url.com");
+        var productResponse = new ProductResponse(id, productName, new BigDecimal("1002.0"), "Electronics", "Best Laptop", 1, "url.com");
         var respString = convertToJson(productResponse);
-        ProductRequest productRequest = new ProductRequest(productName, 1002.0, categoryId, "Best Laptop", 1, "url.com");
+        ProductRequest productRequest = new ProductRequest(productName, new BigDecimal("1002.0"), categoryId, "Best Laptop", 1, "url.com");
         var requestJson = convertToJson(productResponse);
         when(productService.updateProductById(id, productRequest)).thenReturn(productResponse);
         mockMvc.perform(put("/products/" + id).with(csrf()).content(requestJson).contentType(APPLICATION_JSON))

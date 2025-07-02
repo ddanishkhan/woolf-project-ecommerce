@@ -1,7 +1,7 @@
 package com.ecommerce.external.api.auth;
 
-import com.ecommerce.dto.request.TokenAuthenticationRequest;
-import com.ecommerce.dto.response.TokenAuthenticationResponse;
+import com.ecommerce.dtos.auth.TokenAuthenticationRequest;
+import com.ecommerce.dtos.auth.TokenAuthenticationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,12 +19,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class JwtAuthenticationServer implements AuthenticationServer {
 
     private final RestTemplateBuilder restTemplateBuilder;
-
-    @Value("${security.jwt.secret-key}")
-    private String secretKey;
-
-    @Value("${security.jwt.authorities.key}")
-    private String authoritiesKey;
 
     @Value("${security.jwt.server.url}")
     private String authServerUrl;

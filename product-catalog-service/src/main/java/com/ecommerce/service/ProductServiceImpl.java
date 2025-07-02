@@ -5,12 +5,11 @@ import com.ecommerce.dto.StockUpdateRequest;
 import com.ecommerce.dto.mapper.EntityToResponseMapper;
 import com.ecommerce.dto.mapper.RequestToEntityMapper;
 import com.ecommerce.dto.request.BatchStockUpdateRequest;
-import com.ecommerce.dto.request.ProductRequest;
+import com.ecommerce.dtos.product.ProductRequest;
 import com.ecommerce.dto.request.StockUpdateItem;
-import com.ecommerce.dto.response.ProductResponse;
+import com.ecommerce.dtos.product.ProductResponse;
 import com.ecommerce.elasticsearch.model.ProductDocument;
 import com.ecommerce.elasticsearch.repository.ProductSearchRepository;
-import com.ecommerce.events.dto.OrderItem;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.model.ProductEntity;
 import com.ecommerce.repository.CategoryRepository;
@@ -59,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse getProductById(UUID id) throws ProductNotFoundException {
         var dbResponse = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
+                .orElseThrow(() -> new ProductNotFoundException(id));
         return EntityToResponseMapper.toProductResponse(dbResponse);
     }
 
@@ -95,7 +94,7 @@ public class ProductServiceImpl implements ProductService {
     public boolean deleteProductById(UUID id) throws ProductNotFoundException {
         log.debug("Attempting to delete product with ID: {}", id);
         ProductEntity productEntity = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found for deletion with ID: " + id));
+                .orElseThrow(() -> new ProductNotFoundException(id));
 
         String productName = productEntity.getName();
 
@@ -115,7 +114,7 @@ public class ProductServiceImpl implements ProductService {
         log.debug("Attempting to update product with ID: {}", id);
         // Check if product exists before updating.
         ProductEntity existingEntity = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found for update with ID: " + id));
+                .orElseThrow(() -> new ProductNotFoundException(id));
 
         // Update fields of existingEntity from productRequest
         // This avoids issues with detached entities or overwriting existing non-updated fields if RequestToEntityMapper creates a new one
@@ -147,7 +146,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             // 1. Find the product by its ID
             ProductEntity product = productRepository.findById(productId)
-                    .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
+                    .orElseThrow(() -> new ProductNotFoundException(productId));
 
             // 2. Check for sufficient stock
             if (product.getStockQuantity() < request.getQuantity()) {
@@ -174,7 +173,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             // 1. Find the product by its ID
             ProductEntity product = productRepository.findById(productId)
-                    .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
+                    .orElseThrow(() -> new ProductNotFoundException(productId));
 
             product.setStockQuantity(product.getStockQuantity() + request.getQuantity());
 
@@ -205,7 +204,7 @@ public class ProductServiceImpl implements ProductService {
             for (StockUpdateItem item : request.getItems()) {
                 ProductEntity product = productsById.get(item.getProductId());
                 if (product == null) {
-                    throw new ProductNotFoundException("Product not found with ID: " + item.getProductId());
+                    throw new ProductNotFoundException(item.getProductId());
                 }
                 if (product.getStockQuantity() < item.getQuantity()) {
                     throw new IllegalStateException("Insufficient stock for product: " + product.getName());

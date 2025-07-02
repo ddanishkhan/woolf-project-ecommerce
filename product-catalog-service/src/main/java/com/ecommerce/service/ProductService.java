@@ -3,8 +3,8 @@ package com.ecommerce.service;
 import com.ecommerce.dto.CustomPageDTO;
 import com.ecommerce.dto.StockUpdateRequest;
 import com.ecommerce.dto.request.BatchStockUpdateRequest;
-import com.ecommerce.dto.request.ProductRequest;
-import com.ecommerce.dto.response.ProductResponse;
+import com.ecommerce.dtos.product.ProductRequest;
+import com.ecommerce.dtos.product.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
 
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package com.ecommerce.dto.mapper;
 
-import com.ecommerce.dto.response.ProductResponse;
+import com.ecommerce.dtos.product.ProductResponse;
 import com.ecommerce.elasticsearch.model.ProductDocument;
 import com.ecommerce.model.ProductEntity;
 

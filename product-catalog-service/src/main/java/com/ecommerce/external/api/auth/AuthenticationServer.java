@@ -1,7 +1,7 @@
 package com.ecommerce.external.api.auth;
 
-import com.ecommerce.dto.request.TokenAuthenticationRequest;
-import com.ecommerce.dto.response.TokenAuthenticationResponse;
+import com.ecommerce.dtos.auth.TokenAuthenticationRequest;
+import com.ecommerce.dtos.auth.TokenAuthenticationResponse;
 import org.springframework.http.ResponseEntity;
 
 public interface AuthenticationServer {

@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -25,8 +27,8 @@ public class ProductDocument {
     @Field(type = FieldType.Text, name = "description")
     private String description;
 
-    @Field(type = FieldType.Double, name = "price")
-    private Double price;
+    @Field(type = FieldType.Scaled_Float, name = "price", scalingFactor = 100)
+    private BigDecimal price;
 
     @Field(type = FieldType.Keyword, name = "category") // Keyword for exact matches, Text for full-text search
     private String category;
