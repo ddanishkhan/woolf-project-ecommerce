@@ -2,10 +2,10 @@ package com.ecommerce.cartservice.dto;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class AddItemRequest {
-    private String productId;
-    private String productName;
-    private double price;
+    private UUID productId;
     private int quantity;
 }

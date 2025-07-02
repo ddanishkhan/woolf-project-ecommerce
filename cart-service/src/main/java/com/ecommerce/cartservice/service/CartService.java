@@ -2,16 +2,24 @@ package com.ecommerce.cartservice.service;
 
 
 import com.ecommerce.cartservice.dto.AddItemRequest;
+import com.ecommerce.cartservice.external.api.ordermanagement.OrderManagementService;
+import com.ecommerce.cartservice.external.api.product.ProductCatalogService;
 import com.ecommerce.cartservice.model.Cart;
 import com.ecommerce.cartservice.model.CartItem;
 import com.ecommerce.cartservice.repository.CartRepository;
+import com.ecommerce.dtos.order.CreateOrderRequest;
+import com.ecommerce.dtos.order.OrderItemRequest;
+import com.ecommerce.dtos.order.OrderResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +27,8 @@ import java.util.Optional;
 public class CartService {
 
     private final CartRepository cartRepository;
+    private final ProductCatalogService productCatalogService;
+    private final OrderManagementService orderManagementService;
 
     /**
      * Retrieves the cart for a given user.
@@ -30,7 +40,7 @@ public class CartService {
      */
     @Cacheable(value = "carts", key = "#userId")
     public Cart getCartByUserId(String userId) {
-        log.debug("Fetching cart from MongoDB for user: {}", userId);
+        log.info("Fetching cart from MongoDB for user: {}", userId);
         return cartRepository.findByUserId(userId)
                 .orElse(new Cart(userId)); // Return a new empty cart if none exists
     }
@@ -40,7 +50,7 @@ public class CartService {
      * Evicts the cart from the Redis cache to ensure data consistency.
      * The next call to getCartByUserId will fetch from DB and re-cache.
      *
-     * @param userId The user's unique ID (email).
+     * @param userId  The user's unique ID (email).
      * @param request The item details to add.
      * @return The updated Cart.
      */
@@ -58,8 +68,9 @@ public class CartService {
             CartItem existingItem = existingItemOpt.get();
             existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
         } else {
+            var product = productCatalogService.getProductDetail(request.getProductId());
             // If item is new, add it to the cart
-            CartItem newItem = new CartItem(request.getProductId(), request.getProductName(), request.getQuantity(), request.getPrice());
+            CartItem newItem = new CartItem(product.id(), product.name(), request.getQuantity(), product.price());
             cart.getItems().add(newItem);
         }
 
@@ -70,12 +81,12 @@ public class CartService {
      * Removes an item from the user's cart.
      * Evicts the cart from Redis cache.
      *
-     * @param userId The user's unique ID.
+     * @param userId    The user's unique ID.
      * @param productId The ID of the product to remove.
      * @return The updated Cart.
      */
     @CacheEvict(value = "carts", key = "#userId")
-    public Cart removeItemFromCart(String userId, String productId) {
+    public Cart removeItemFromCart(String userId, UUID productId) {
         log.debug("Removing item {} from cart for user: {}", productId, userId);
         Cart cart = getCartFromDb(userId);
         cart.getItems().removeIf(item -> item.getProductId().equals(productId));
@@ -96,6 +107,24 @@ public class CartService {
         Cart cart = getCartFromDb(userId);
         cart.getItems().clear();
         return cartRepository.save(cart);
+    }
+
+    public OrderResponse checkoutCart(String userId, String token) {
+        log.debug("Checkout the cart items.");
+        var createOrder = createOrderFromCart(userId);
+        var order = orderManagementService.createOrder(createOrder, token);
+        log.info("order created : {}", order.orderId());
+        return order;
+    }
+
+    private CreateOrderRequest createOrderFromCart(String userId) {
+        List<OrderItemRequest> items = new ArrayList<>();
+        var order = new CreateOrderRequest(items);
+        var cart = getCartFromDb(userId);
+        for (CartItem item : cart.getItems()) {
+            items.add(new OrderItemRequest(item.getProductId(), item.getQuantity()));
+        }
+        return order;
     }
 
     /**

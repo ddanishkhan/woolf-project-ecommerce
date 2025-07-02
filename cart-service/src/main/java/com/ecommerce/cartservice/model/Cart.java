@@ -39,7 +39,7 @@ public class Cart implements Serializable {
      */
     public double getTotalPrice() {
         BigDecimal total = items.stream()
-                .map(item -> BigDecimal.valueOf(item.getPrice()).multiply(BigDecimal.valueOf(item.getQuantity())))
+                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return total.setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
