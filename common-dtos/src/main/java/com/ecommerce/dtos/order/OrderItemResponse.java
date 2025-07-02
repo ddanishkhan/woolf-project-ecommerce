@@ -1,11 +1,8 @@
-package com.ecommerce.ordermanagement.dto;
+package com.ecommerce.dtos.order;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-/**
- * DTO for representing a single order item in API responses.
- */
 public record OrderItemResponse(
         UUID productId,
         String productName,
@@ -13,3 +10,5 @@ public record OrderItemResponse(
         BigDecimal priceAtTimeOfOrder
 ) {
 }
+
+
