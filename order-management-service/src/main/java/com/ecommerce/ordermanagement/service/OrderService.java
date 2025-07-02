@@ -1,12 +1,11 @@
 package com.ecommerce.ordermanagement.service;
 
-import com.ecommerce.ordermanagement.dto.CreateOrderRequest;
-import com.ecommerce.ordermanagement.dto.OrderItemRequest;
-import com.ecommerce.ordermanagement.dto.OrderItemResponse;
-import com.ecommerce.ordermanagement.dto.OrderResponse;
-import com.ecommerce.ordermanagement.dto.ProductDto;
-import com.ecommerce.ordermanagement.dto.UpdateOrderStatusRequest;
-import com.ecommerce.ordermanagement.dto.UserDto;
+import com.ecommerce.dtos.order.CreateOrderRequest;
+import com.ecommerce.dtos.order.OrderItemRequest;
+import com.ecommerce.dtos.order.OrderItemResponse;
+import com.ecommerce.dtos.order.OrderResponse;
+import com.ecommerce.dtos.product.ProductResponse;
+import com.ecommerce.dtos.auth.User;
 import com.ecommerce.ordermanagement.events.dto.OrderEvent;
 import com.ecommerce.ordermanagement.events.publisher.OrderEventPublisher;
 import com.ecommerce.ordermanagement.exception.OrderProcessingException;
@@ -15,7 +14,7 @@ import com.ecommerce.ordermanagement.exception.ServiceCommunicationException;
 import com.ecommerce.ordermanagement.model.Customer;
 import com.ecommerce.ordermanagement.model.Order;
 import com.ecommerce.ordermanagement.model.OrderItem;
-import com.ecommerce.ordermanagement.model.OrderStatus;
+import com.ecommerce.dtos.order.OrderStatus;
 import com.ecommerce.ordermanagement.repository.CustomerRepository;
 import com.ecommerce.ordermanagement.repository.OrderRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +35,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -74,7 +72,7 @@ public class OrderService {
 
         for (OrderItemRequest itemRequest : request.items()) {
             // 1. Call the Product Service to get product details
-            ProductDto product = fetchProductDetails(itemRequest.productId(), authHeader);
+            ProductResponse product = fetchProductDetails(itemRequest.productId(), authHeader);
 
             // 2. Check for sufficient stock
             if (product == null || product.stockQuantity() < itemRequest.quantity()) {
@@ -101,7 +99,7 @@ public class OrderService {
                 savedOrder.getId(),
                 savedOrder.getOrderItems().stream()
                         .map(item -> new com.ecommerce.ordermanagement.events.dto.OrderItem(item.getProductId(), item.getQuantity()))
-                        .collect(Collectors.toList())
+                        .toList()
         );
         log.info("Publish event {}", objectMapper.writeValueAsString(orderEvent));
         orderEventPublisher.publishOrderCreatedEvent(orderEvent);
@@ -126,7 +124,7 @@ public class OrderService {
         }
 
         // If not, fetch from the User Management Service.
-        UserDto userDto = fetchUserDetailsFromRemote(userId, authHeader);
+        User userDto = fetchUserDetailsFromRemote(userId, authHeader);
 
         Customer newCustomer = new Customer();
         newCustomer.setId(userDto.id());
@@ -144,15 +142,15 @@ public class OrderService {
         }
     }
 
-    private UserDto fetchUserDetailsFromRemote(Long userId, String authHeader) {
+    private User fetchUserDetailsFromRemote(Long userId, String authHeader) {
         String url = userServiceUrl + "/profile/me";
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", authHeader);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<UserDto> response = restTemplate.exchange(url, HttpMethod.GET, entity, UserDto.class);
-            UserDto userDto = response.getBody();
+            ResponseEntity<User> response = restTemplate.exchange(url, HttpMethod.GET, entity, User.class);
+            User userDto = response.getBody();
 
             if (userDto == null) {
                 throw new ResourceNotFoundException("Could not retrieve user details from User Management Service.");
@@ -168,7 +166,7 @@ public class OrderService {
         }
     }
 
-    private ProductDto fetchProductDetails(UUID productId, String authHeader) {
+    private ProductResponse fetchProductDetails(UUID productId, String authHeader) {
         String url = UriComponentsBuilder.fromUriString(productServiceUrl)
                 .pathSegment("products", productId.toString())
                 .build()
@@ -179,7 +177,7 @@ public class OrderService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<ProductDto> response = restTemplate.exchange(url, HttpMethod.GET, entity, ProductDto.class);
+            ResponseEntity<ProductResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, ProductResponse.class);
             return response.getBody();
         } catch (HttpClientErrorException.NotFound ex) {
             throw new ResourceNotFoundException("Product not found with ID: " + productId);
@@ -201,11 +199,11 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse updateOrderStatus(Long orderId, UpdateOrderStatusRequest statusRequest) {
+    public OrderResponse updateOrderStatus(Long orderId, OrderStatus orderStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
-        order.setStatus(statusRequest.status());
+        order.setStatus(orderStatus);
         Order updatedOrder = orderRepository.save(order);
 
         return convertToOrderResponse(updatedOrder);

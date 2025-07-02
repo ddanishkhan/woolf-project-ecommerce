@@ -1,8 +1,8 @@
 package com.ecommerce.ordermanagement.controller;
 
-import com.ecommerce.ordermanagement.dto.CreateOrderRequest;
-import com.ecommerce.ordermanagement.dto.OrderResponse;
-import com.ecommerce.ordermanagement.dto.UpdateOrderStatusRequest;
+import com.ecommerce.dtos.order.CreateOrderRequest;
+import com.ecommerce.dtos.order.OrderResponse;
+import com.ecommerce.dtos.order.OrderStatus;
 import com.ecommerce.ordermanagement.service.OrderService;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
@@ -12,9 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,7 +62,7 @@ public class OrderController {
      * @return The order details with HTTP status 200 (OK).
      */
     @GetMapping("/{id}")
-    @PreAuthorize("@orderSecurityService.isOwner(authentication, #id) or hasAuthority('ADMIN') or hasRole('SERVICE')")
+    @PreAuthorize("@orderSecurityService.isOwner(authentication, #id) or hasAnyRole('ADMIN', 'SERVICE')")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
@@ -75,7 +75,7 @@ public class OrderController {
      * @return A list of orders with HTTP status 200 (OK).
      */
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAuthority('ADMIN")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderResponse>> getOrdersByCustomer(@PathVariable Long customerId) {
         return ResponseEntity.ok(orderService.getOrdersByCustomerId(customerId));
     }
@@ -84,14 +84,14 @@ public class OrderController {
      * PUT /api/orders/{id}/status : Updates the status of an order.
      *
      * @param id            The ID of the order to update.
-     * @param statusRequest The request body containing the new status.
+     * @param status The request body containing the new status.
      * @return The updated order details with HTTP status 200 (OK).
      */
-    @PutMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('ADMIN')") // Only Admins can update status
+    @PatchMapping("/{id}/status/{status}")
+    @PreAuthorize("hasRole('ADMIN')") // Only Admins can update status
     public ResponseEntity<OrderResponse> updateOrderStatus(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateOrderStatusRequest statusRequest) {
-        return ResponseEntity.ok(orderService.updateOrderStatus(id, statusRequest));
+            @PathVariable OrderStatus status) {
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
 }

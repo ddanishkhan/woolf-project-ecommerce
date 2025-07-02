@@ -1,5 +1,6 @@
 package com.ecommerce.ordermanagement.model;
 
+import com.ecommerce.dtos.order.OrderStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

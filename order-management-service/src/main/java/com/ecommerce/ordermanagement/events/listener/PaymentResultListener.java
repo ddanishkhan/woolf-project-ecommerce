@@ -7,7 +7,7 @@ import com.ecommerce.ordermanagement.events.dto.PaymentProcessedEvent;
 import com.ecommerce.ordermanagement.events.publisher.OrderEventPublisher;
 import com.ecommerce.ordermanagement.events.publisher.OrderReceiptGenerationEventPublisher;
 import com.ecommerce.ordermanagement.model.Order;
-import com.ecommerce.ordermanagement.model.OrderStatus;
+import com.ecommerce.dtos.order.OrderStatus;
 import com.ecommerce.ordermanagement.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
