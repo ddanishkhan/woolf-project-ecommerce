@@ -103,6 +103,7 @@ public class JwtTokenProvider {
                 .claim(CLAIM_USERNAME, username)
                 .claim(CLAIM_ROLES, roles)
                 .subject(username)
+                .notBefore(now)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(jwtSecretKey, HS_512)
