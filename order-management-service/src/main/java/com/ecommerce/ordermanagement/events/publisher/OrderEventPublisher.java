@@ -14,7 +14,7 @@ public class OrderEventPublisher {
 
     private final KafkaTemplate<String, OrderEvent> kafkaTemplate;
 
-    public void publishOrderCreatedEvent(OrderEvent orderEvent) {
+    public void publishOrderCreatedReserveStockEvent(OrderEvent orderEvent) {
         log.info("Publishing order created event for order ID: {} | topic {}", orderEvent.getOrderId(), KafkaTopicConfig.ORDERS_STOCK_RESERVATION_RESERVE);
         kafkaTemplate.send(KafkaTopicConfig.ORDERS_STOCK_RESERVATION_RESERVE, orderEvent.getOrderId().toString(), orderEvent);
     }

@@ -1,5 +1,6 @@
 package com.ecommerce.ordermanagement.service;
 
+import com.ecommerce.dtos.CustomPageDTO;
 import com.ecommerce.dtos.order.CreateOrderRequest;
 import com.ecommerce.dtos.order.OrderItemRequest;
 import com.ecommerce.dtos.order.OrderItemResponse;
@@ -23,6 +24,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -38,7 +40,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -94,7 +95,7 @@ public class OrderService {
         // Save the order in its PENDING state. This gives us an orderId.
         Order savedOrder = orderRepository.save(newOrder);
 
-        // Now, create and publish the OrderCreatedEvent for the Saga
+        // Now, create and publish the OrderCreatedEvent
         OrderEvent orderEvent = new OrderEvent(
                 savedOrder.getId(),
                 savedOrder.getOrderItems().stream()
@@ -102,7 +103,7 @@ public class OrderService {
                         .toList()
         );
         log.info("Publish event {}", objectMapper.writeValueAsString(orderEvent));
-        orderEventPublisher.publishOrderCreatedEvent(orderEvent);
+        orderEventPublisher.publishOrderCreatedReserveStockEvent(orderEvent);
 
         return convertToOrderResponse(savedOrder);
     }
@@ -192,10 +193,10 @@ public class OrderService {
         return convertToOrderResponse(order);
     }
 
-    public List<OrderResponse> getOrdersByCustomerId(Long customerId) {
-        return orderRepository.findByCustomerId(customerId).stream()
-                .map(this::convertToOrderResponse)
-                .toList();
+    public CustomPageDTO<OrderResponse> getOrdersByCustomerId(Long customerId, Pageable pageable) {
+        var ordersPage = orderRepository.findByCustomerId(customerId, pageable);
+        var list = ordersPage.getContent().stream().map(this::convertToOrderResponse).toList();
+        return new CustomPageDTO<>(list, ordersPage);
     }
 
     @Transactional
