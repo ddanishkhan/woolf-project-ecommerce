@@ -1,6 +1,6 @@
 package com.ecommerce.controller;
 
-import com.ecommerce.dto.CustomPageDTO;
+import com.ecommerce.dtos.CustomPageDTO;
 import com.ecommerce.dto.StockUpdateRequest;
 import com.ecommerce.dto.request.CreateCategoryRequest;
 import com.ecommerce.dtos.product.ProductRequest;

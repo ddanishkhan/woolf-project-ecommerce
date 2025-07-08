@@ -1,7 +1,7 @@
 package com.ecommerce.controller;
 
 import com.ecommerce.config.CustomJwtDecoder;
-import com.ecommerce.dto.CustomPageDTO;
+import com.ecommerce.dtos.CustomPageDTO;
 import com.ecommerce.dtos.product.ProductRequest;
 import com.ecommerce.dtos.product.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;

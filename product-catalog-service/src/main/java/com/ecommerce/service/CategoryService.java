@@ -1,6 +1,6 @@
 package com.ecommerce.service;
 
-import com.ecommerce.dto.CustomPageDTO;
+import com.ecommerce.dtos.CustomPageDTO;
 import com.ecommerce.dto.response.CategoryResponse;
 
 import java.util.UUID;
