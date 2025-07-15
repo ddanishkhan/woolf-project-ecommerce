@@ -160,6 +160,10 @@ public class JwtTokenProvider {
         return (String) claims.get(CLAIM_EMAIL);
     }
 
+    public String getSubjectFromJWT(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
     // Generic method to extract any claim from the token
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
