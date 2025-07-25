@@ -26,7 +26,6 @@ import java.util.Map;
 @Configuration
 public class KafkaConfig {
 
-    public static final String ORDER_CONFIRMED_TOPIC = "orders.confirmed";
     public static final String PAYMENT_PROCESSED_TOPIC = "payments.processed";
     public static final String PAYMENT_PROCESSED_TOPIC_GROUP_ID = "payment-service-group";
 
