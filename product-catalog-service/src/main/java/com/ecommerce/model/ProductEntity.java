@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.LastModifiedDate;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,12 +23,13 @@ public class ProductEntity extends BaseUUIDEntity {
     @Column(nullable = false)
     private BigDecimal price;
 
-    @Column(nullable = false)
+    @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
     @Version
     private Long version; // for optimistic locking
 
+    @Column(name = "cover_imageurl")
     private String coverImageURL;
 
     @ManyToOne
@@ -40,6 +41,6 @@ public class ProductEntity extends BaseUUIDEntity {
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    @LastModifiedDate
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

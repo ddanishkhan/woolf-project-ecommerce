@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-public interface SearchService {
+public interface ProductSearchService {
     // for Elasticsearch search
     List<ProductResponse> searchProductsByName(String name);
     List<ProductResponse> searchProductsByCategory(String category);
