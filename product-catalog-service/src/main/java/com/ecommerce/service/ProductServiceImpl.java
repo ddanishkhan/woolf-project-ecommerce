@@ -1,13 +1,13 @@
 package com.ecommerce.service;
 
-import com.ecommerce.dtos.CustomPageDTO;
+import com.ecommerce.common.dtos.CustomPageDTO;
 import com.ecommerce.dto.StockUpdateRequest;
 import com.ecommerce.dto.mapper.EntityToResponseMapper;
 import com.ecommerce.dto.mapper.RequestToEntityMapper;
 import com.ecommerce.dto.request.BatchStockUpdateRequest;
-import com.ecommerce.dtos.product.ProductRequest;
+import com.ecommerce.common.dtos.product.ProductRequest;
 import com.ecommerce.dto.request.StockUpdateItem;
-import com.ecommerce.dtos.product.ProductResponse;
+import com.ecommerce.common.dtos.product.ProductResponse;
 import com.ecommerce.elasticsearch.model.ProductDocument;
 import com.ecommerce.elasticsearch.repository.ProductSearchRepository;
 import com.ecommerce.exception.ProductNotFoundException;

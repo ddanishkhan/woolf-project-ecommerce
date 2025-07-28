@@ -1,7 +1,7 @@
 package com.ecommerce.external.api;
 
-import com.ecommerce.dtos.product.ProductRequest;
-import com.ecommerce.dtos.product.ProductResponse;
+import com.ecommerce.common.dtos.product.ProductRequest;
+import com.ecommerce.common.dtos.product.ProductResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;

@@ -1,12 +1,12 @@
 package com.ecommerce.controller;
 
-import com.ecommerce.dtos.CustomPageDTO;
+import com.ecommerce.common.dtos.CustomPageDTO;
 import com.ecommerce.dto.StockUpdateRequest;
 import com.ecommerce.dto.request.CreateCategoryRequest;
-import com.ecommerce.dtos.product.ProductRequest;
+import com.ecommerce.common.dtos.product.ProductRequest;
 import com.ecommerce.dto.request.UpdateCategoryRequest;
 import com.ecommerce.dto.response.CategoryResponse;
-import com.ecommerce.dtos.product.ProductResponse;
+import com.ecommerce.common.dtos.product.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.service.CategoryService;
 import com.ecommerce.service.ProductService;

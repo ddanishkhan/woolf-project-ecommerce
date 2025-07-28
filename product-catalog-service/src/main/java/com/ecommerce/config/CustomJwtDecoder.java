@@ -1,7 +1,7 @@
 package com.ecommerce.config;
 
-import com.ecommerce.dtos.auth.TokenAuthenticationRequest;
-import com.ecommerce.dtos.auth.TokenAuthenticationResponse;
+import com.ecommerce.common.dtos.auth.TokenAuthenticationRequest;
+import com.ecommerce.common.dtos.auth.TokenAuthenticationResponse;
 import com.ecommerce.external.api.auth.AuthenticationServer;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;

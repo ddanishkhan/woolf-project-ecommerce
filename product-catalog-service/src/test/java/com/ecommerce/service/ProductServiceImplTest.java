@@ -1,7 +1,7 @@
 package com.ecommerce.service;
 
-import com.ecommerce.dtos.product.ProductRequest;
-import com.ecommerce.dtos.product.ProductResponse;
+import com.ecommerce.common.dtos.product.ProductRequest;
+import com.ecommerce.common.dtos.product.ProductResponse;
 import com.ecommerce.elasticsearch.repository.ProductSearchRepository;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.model.CategoryEntity;

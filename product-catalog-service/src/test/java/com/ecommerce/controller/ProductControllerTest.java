@@ -1,9 +1,9 @@
 package com.ecommerce.controller;
 
 import com.ecommerce.config.CustomJwtDecoder;
-import com.ecommerce.dtos.CustomPageDTO;
-import com.ecommerce.dtos.product.ProductRequest;
-import com.ecommerce.dtos.product.ProductResponse;
+import com.ecommerce.common.dtos.CustomPageDTO;
+import com.ecommerce.common.dtos.product.ProductRequest;
+import com.ecommerce.common.dtos.product.ProductResponse;
 import com.ecommerce.exception.ProductNotFoundException;
 import com.ecommerce.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,7 +1,7 @@
 package com.ecommerce.service;
 
-import com.ecommerce.dtos.CustomPageDTO;
-import com.ecommerce.dtos.product.ProductResponse;
+import com.ecommerce.common.dtos.CustomPageDTO;
+import com.ecommerce.common.dtos.product.ProductResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
