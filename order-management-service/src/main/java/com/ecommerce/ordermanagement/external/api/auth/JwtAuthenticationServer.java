@@ -1,7 +1,7 @@
 package com.ecommerce.ordermanagement.external.api.auth;
 
-import com.ecommerce.dtos.auth.TokenAuthenticationRequest;
-import com.ecommerce.dtos.auth.TokenAuthenticationResponse;
+import com.ecommerce.common.dtos.auth.TokenAuthenticationRequest;
+import com.ecommerce.common.dtos.auth.TokenAuthenticationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

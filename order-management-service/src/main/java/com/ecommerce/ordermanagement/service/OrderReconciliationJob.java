@@ -1,7 +1,7 @@
 
 package com.ecommerce.ordermanagement.service;
 
-import com.ecommerce.dtos.order.OrderStatus;
+import com.ecommerce.common.dtos.order.OrderStatus;
 import com.ecommerce.ordermanagement.events.dto.OrderEvent;
 import com.ecommerce.ordermanagement.events.publisher.OrderEventPublisher;
 import com.ecommerce.ordermanagement.model.Order;

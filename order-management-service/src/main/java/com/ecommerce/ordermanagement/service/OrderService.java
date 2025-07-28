@@ -1,12 +1,12 @@
 package com.ecommerce.ordermanagement.service;
 
-import com.ecommerce.dtos.CustomPageDTO;
-import com.ecommerce.dtos.order.CreateOrderRequest;
-import com.ecommerce.dtos.order.OrderItemRequest;
-import com.ecommerce.dtos.order.OrderItemResponse;
-import com.ecommerce.dtos.order.OrderResponse;
-import com.ecommerce.dtos.product.ProductResponse;
-import com.ecommerce.dtos.auth.User;
+import com.ecommerce.common.dtos.CustomPageDTO;
+import com.ecommerce.common.dtos.order.CreateOrderRequest;
+import com.ecommerce.common.dtos.order.OrderItemRequest;
+import com.ecommerce.common.dtos.order.OrderItemResponse;
+import com.ecommerce.common.dtos.order.OrderResponse;
+import com.ecommerce.common.dtos.product.ProductResponse;
+import com.ecommerce.common.dtos.auth.User;
 import com.ecommerce.ordermanagement.events.dto.OrderEvent;
 import com.ecommerce.ordermanagement.events.publisher.OrderEventPublisher;
 import com.ecommerce.ordermanagement.exception.OrderProcessingException;
@@ -15,7 +15,7 @@ import com.ecommerce.ordermanagement.exception.ServiceCommunicationException;
 import com.ecommerce.ordermanagement.model.Customer;
 import com.ecommerce.ordermanagement.model.Order;
 import com.ecommerce.ordermanagement.model.OrderItem;
-import com.ecommerce.dtos.order.OrderStatus;
+import com.ecommerce.common.dtos.order.OrderStatus;
 import com.ecommerce.ordermanagement.repository.CustomerRepository;
 import com.ecommerce.ordermanagement.repository.OrderRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -3,7 +3,7 @@ package com.ecommerce.ordermanagement.events.listener;
 import com.ecommerce.ordermanagement.config.KafkaTopicConfig;
 import com.ecommerce.ordermanagement.events.dto.StockReservationEvent;
 import com.ecommerce.ordermanagement.model.Order;
-import com.ecommerce.dtos.order.OrderStatus;
+import com.ecommerce.common.dtos.order.OrderStatus;
 import com.ecommerce.ordermanagement.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package com.ecommerce.ordermanagement.repository;
 
-import com.ecommerce.dtos.order.OrderStatus;
+import com.ecommerce.common.dtos.order.OrderStatus;
 import com.ecommerce.ordermanagement.model.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

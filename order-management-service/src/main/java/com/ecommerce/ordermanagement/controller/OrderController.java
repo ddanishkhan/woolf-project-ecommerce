@@ -1,9 +1,9 @@
 package com.ecommerce.ordermanagement.controller;
 
-import com.ecommerce.dtos.CustomPageDTO;
-import com.ecommerce.dtos.order.CreateOrderRequest;
-import com.ecommerce.dtos.order.OrderResponse;
-import com.ecommerce.dtos.order.OrderStatus;
+import com.ecommerce.common.dtos.CustomPageDTO;
+import com.ecommerce.common.dtos.order.CreateOrderRequest;
+import com.ecommerce.common.dtos.order.OrderResponse;
+import com.ecommerce.common.dtos.order.OrderStatus;
 import com.ecommerce.ordermanagement.service.OrderService;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
