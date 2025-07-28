@@ -1,4 +1,4 @@
-package com.ecommerce.dtos.order;
+package com.ecommerce.common.dtos.order;
 
 import java.math.BigDecimal;
 import java.util.UUID;

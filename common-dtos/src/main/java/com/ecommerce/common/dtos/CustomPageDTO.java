@@ -1,4 +1,4 @@
-package com.ecommerce.dtos;
+package com.ecommerce.common.dtos;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.ecommerce.dtos.order;
+package com.ecommerce.common.dtos.order;
 
 public enum OrderStatus {
     PENDING,            // Initial state, before stock reservation

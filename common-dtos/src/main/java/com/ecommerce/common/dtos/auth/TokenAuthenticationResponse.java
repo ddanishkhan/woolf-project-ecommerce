@@ -1,4 +1,4 @@
-package com.ecommerce.dtos.auth;
+package com.ecommerce.common.dtos.auth;
 
 import java.util.List;
 

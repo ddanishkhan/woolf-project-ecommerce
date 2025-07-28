@@ -1,4 +1,4 @@
-package com.ecommerce.dtos.product;
+package com.ecommerce.common.dtos.product;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;

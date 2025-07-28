@@ -1,4 +1,4 @@
-package com.ecommerce.dtos.order;
+package com.ecommerce.common.dtos.order;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
