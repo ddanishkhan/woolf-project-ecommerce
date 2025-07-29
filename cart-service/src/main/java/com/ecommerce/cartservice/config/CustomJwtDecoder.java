@@ -1,8 +1,8 @@
 package com.ecommerce.cartservice.config;
 
 import com.ecommerce.cartservice.external.api.auth.AuthenticationServer;
-import com.ecommerce.dtos.auth.TokenAuthenticationRequest;
-import com.ecommerce.dtos.auth.TokenAuthenticationResponse;
+import com.ecommerce.common.dtos.auth.TokenAuthenticationRequest;
+import com.ecommerce.common.dtos.auth.TokenAuthenticationResponse;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACVerifier;

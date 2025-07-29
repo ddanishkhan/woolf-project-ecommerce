@@ -1,6 +1,6 @@
 package com.ecommerce.cartservice.external.api.product;
 
-import com.ecommerce.dtos.product.ProductResponse;
+import com.ecommerce.common.dtos.product.ProductResponse;
 
 import java.util.UUID;
 

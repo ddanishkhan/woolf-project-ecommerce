@@ -2,7 +2,7 @@ package com.ecommerce.cartservice.controller;
 
 import com.ecommerce.cartservice.dto.AddItemRequest;
 import com.ecommerce.cartservice.dto.CartResponse;
-import com.ecommerce.dtos.order.OrderResponse;
+import com.ecommerce.common.dtos.order.OrderResponse;
 import com.ecommerce.cartservice.service.CartService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

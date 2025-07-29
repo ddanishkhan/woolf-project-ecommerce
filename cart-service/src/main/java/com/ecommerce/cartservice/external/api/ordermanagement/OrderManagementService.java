@@ -1,7 +1,7 @@
 package com.ecommerce.cartservice.external.api.ordermanagement;
 
-import com.ecommerce.dtos.order.CreateOrderRequest;
-import com.ecommerce.dtos.order.OrderResponse;
+import com.ecommerce.common.dtos.order.CreateOrderRequest;
+import com.ecommerce.common.dtos.order.OrderResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
