@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="[http://www.thymeleaf.org](http://www.thymeleaf.org)">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .container { border: 1px solid #ddd; padding: 20px; max-width: 600px; margin: auto; }
+        .header { text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
+        .item-table { width: 100%; border-collapse: collapse; }
+        .item-table th, .item-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .item-table th { background-color: #f2f2f2; }
+        .footer { text-align: center; margin-top: 20px; font-size: 0.9em; color: #777; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>Thank You for Your Order!</h2>
+        <p>Here is a summary of your recent purchase.</p>
+    </div>
+
+    <h3>Order Details</h3>
+    <p><strong>Order ID:</strong> <span th:text="${order.orderId}">#12345</span></p>
+    <p><strong>Order Date:</strong> <span th:text="${#temporals.format(order.orderDate, 'dd-MMM-yyyy HH:mm')}">21-Jun-2025 23:30</span>
+    </p>
+
+    <h3>Items Purchased</h3>
+    <table class="item-table">
+        <thead>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${order.items}">
+            <td th:text="${item.productName}">Product Name</td>
+            <td th:text="${item.quantity}">1</td>
+            <td th:text="${'$' + #numbers.formatDecimal(item.priceAtTimeOfOrder, 1, 'COMMA', 2, 'POINT')}">$20.00</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Total Amount: <span
+            th:text="${'$' + #numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">$20.00</span></h3>
+
+    <div class="footer">
+        <p>If you have any questions, please contact our support team.</p>
+        <p>&copy; <span th:text="${#dates.year(#dates.createNow())}">2025</span> Woolf E-Commerce. All rights reserved.
+        </p>
+    </div>
+</div>
+</body>
+</html>

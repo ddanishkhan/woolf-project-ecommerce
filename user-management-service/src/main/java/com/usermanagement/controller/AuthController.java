@@ -1,0 +1,157 @@
+package com.usermanagement.controller;
+
+import com.usermanagement.dto.ForgotPasswordRequest;
+import com.usermanagement.dto.UpdateRoleRequest;
+import com.usermanagement.dto.response.JwtAuthenticationResponse;
+import com.usermanagement.dto.LoginRequest;
+import com.usermanagement.dto.RegisterRequest;
+import com.usermanagement.dto.ResetPasswordRequest;
+import com.usermanagement.dto.response.MessageResponse;
+import com.usermanagement.model.User;
+import com.usermanagement.security.JwtTokenProvider;
+import com.usermanagement.service.TokenBlacklistService;
+import com.usermanagement.service.UserService;
+import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
+
+@Slf4j
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
+
+    @GetMapping("/login-page")
+    public ModelAndView loginPage() {
+        return new ModelAndView("login");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsernameOrEmail(),
+                        loginRequest.getPassword()
+                )
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User appUser = userService.findByUsername(userDetails.getUsername()); // Fetch User object
+
+        if (appUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed: User details not found.");
+        }
+        String displayName = appUser.getDisplayName() != null ? appUser.getDisplayName() : appUser.getUsername();
+
+        // Use the JwtTokenProvider method that takes User object
+        String jwt = jwtTokenProvider.generateInternalToken(
+                appUser, // Pass the User object
+                displayName,
+                userDetails.getAuthorities()
+        );
+        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt));
+
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+
+        userService.registerNewUser(
+                registerRequest.getUsername(),
+                registerRequest.getEmail(),
+                registerRequest.getPassword(),
+                registerRequest.getDisplayName()
+        );
+        return ResponseEntity.ok(new MessageResponse("User registered successfully! Please login."));
+    }
+
+    @PutMapping("/role")
+    public ResponseEntity<?> assignRole(@Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader,
+                                        @Valid @RequestBody UpdateRoleRequest updateRoleRequest) {
+        log.info("Assign role request received.");
+        String token = jwtTokenProvider.extractAndValidateToken(authorizationHeader);
+
+        if (!jwtTokenProvider.isAdmin(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        userService.updateUserRole(
+                updateRoleRequest.getEmail(),
+                updateRoleRequest.getRole()
+        );
+        return ResponseEntity.ok(new MessageResponse("User role updated successfully!"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(HttpServletRequest request) {
+        String jwt = extractJwtFromRequest(request);
+        if (StringUtils.hasText(jwt)) {
+
+            // To revoke all tokens for the user, we need the User object.
+            // We get the username from the token being used for logout.
+            String username = jwtTokenProvider.getUsernameFromJWT(jwt);
+            User user = userService.findByUsername(username);
+
+            if (user != null) {
+                tokenBlacklistService.revokeAllTokensForUser(user);
+                // SecurityContextHolder.clearContext(); // Good practice for stateless apps too
+                return ResponseEntity.ok(new MessageResponse("User logged out successfully. All active tokens have been revoked."));
+            } else {
+                // This case should be rare if the token was valid to get username
+                // Fallback: blacklist only the current token if user not found (though this indicates an issue)
+                String jti = jwtTokenProvider.getJtiFromJWT(jwt);
+                java.util.Date expiryDate = jwtTokenProvider.getExpirationDateFromJWT(jwt);
+                tokenBlacklistService.addToBlacklist(jti, expiryDate);
+                return ResponseEntity.ok(new MessageResponse("Logged out. Current token blacklisted (user context not fully resolved)."));
+            }
+
+        }
+        return ResponseEntity.badRequest().body("Logout failed: No token provided or token malformed.");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+        User user = userService.findByEmail(forgotPasswordRequest.getEmail());
+        if (user == null) {
+            log.warn("Email {} not found to reset password. ", forgotPasswordRequest.getEmail());
+            return ResponseEntity.ok(new MessageResponse("If an account with this email exists, a password reset link has been sent."));
+        }
+        return userService.createPasswordResetTokenForUser(user);
+    }
+
+    /**
+     * For processing the password reset link of the user.
+     * @param resetPasswordRequest The request containing new password and the reset token.
+     * @return If password was reset successfully.
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        return userService.resetPassword(resetPasswordRequest);
+    }
+
+    private String extractJwtFromRequest(HttpServletRequest request) {
+        return TokenValidationController.extractJwtFromRequest(request);
+    }
+}
